@@ -1,44 +1,68 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import {
+  isBackendStatusResponse,
+  type BackendStatusResponse,
+} from "@household-finance/shared";
+import { useEffect, useState } from "react";
 
-type BackendResponse = {
-  status: string;
-  service: string;
-};
+async function loadBackendStatus(): Promise<BackendStatusResponse> {
+  const response = await fetch("/api/backend", { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error(`A backend HTTP ${response.status} hibával válaszolt.`);
+  }
+
+  const data: unknown = await response.json();
+  if (!isBackendStatusResponse(data)) {
+    throw new Error("A backend válasza nem megfelelő.");
+  }
+
+  return data;
+}
 
 export default function BackendStatus() {
-  const [result, setResult] = useState<BackendResponse | null>(null);
+  const [result, setResult] = useState<BackendStatusResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
 
-  const checkBackend = useCallback(async () => {
+  async function checkBackend() {
     setChecking(true);
     setError(null);
 
     try {
-      const response = await fetch("/api/backend", { cache: "no-store" });
-      if (!response.ok) {
-        throw new Error(`A backend HTTP ${response.status} hibával válaszolt.`);
-      }
-
-      const data = (await response.json()) as Partial<BackendResponse>;
-      if (data.status !== "ok" || typeof data.service !== "string") {
-        throw new Error("A backend válasza nem megfelelő.");
-      }
-
-      setResult(data as BackendResponse);
+      setResult(await loadBackendStatus());
     } catch {
       setResult(null);
       setError("A backend jelenleg nem érhető el.");
     } finally {
       setChecking(false);
     }
-  }, []);
+  }
 
   useEffect(() => {
-    void checkBackend();
-  }, [checkBackend]);
+    let active = true;
+
+    void loadBackendStatus()
+      .then((data) => {
+        if (active) {
+          setResult(data);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setError("A backend jelenleg nem érhető el.");
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setChecking(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const connected = result?.status === "ok";
 
