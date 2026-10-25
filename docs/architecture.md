@@ -9,6 +9,10 @@ Ez a dokumentum a repository jelenlegi állapotát írja le. A tervezett, de mé
 
 ```text
 family_finance/
+├── .codex/
+│   ├── config.toml          Codex subagent concurrency configuration
+│   └── agents/              Project-scoped architect, tester, developer, and product-owner agents
+├── AGENTS.md               Shared project rules for coding agents
 ├── apps/
 │   ├── web/                 Next.js webalkalmazás
 │   └── api/                 Next.js API és hitelesítési végpontok
@@ -63,6 +67,12 @@ flowchart LR
 | Better Auth CLI | 1.7.12 | Auth séma generálása és ellenőrzése |
 | Better Auth Prisma adapter | 1.7.12 | Auth-adatok tárolása Prisma segítségével |
 | PostgreSQL image | 17-alpine | Compose adatbázis |
+
+## Codex agentek
+
+- A repository-szintű közös szabályok az `AGENTS.md` fájlban vannak.
+- A `.codex/agents/` négy projektagentet tartalmaz: `architect`, `tester`, `developer` és `product_owner`. A szerepkörök, felelősségi határok és munkaszabályok agentenként a megfelelő TOML fájlban találhatók.
+- A Codex multi-agent beállítás sessionönként legfeljebb négy párhuzamos subagentet enged.
 
 ## Perzisztencia és konfiguráció
 
