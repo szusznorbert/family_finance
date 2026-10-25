@@ -13,7 +13,7 @@ family_finance/
 │   └── skills/              Projekt-szintű Codex skillek
 ├── .codex/
 │   ├── config.toml          Codex subagent concurrency configuration
-│   └── agents/              Projekt-szintű architect, tester, developer, designer, product-owner és git-workflow agentek
+│   └── agents/              Projekt-szintű architect, tester, reviewer, developer, designer, product-owner és git-workflow agentek
 ├── AGENTS.md               Shared project rules for coding agents
 ├── apps/
 │   ├── web/                 Next.js webalkalmazás
@@ -74,9 +74,9 @@ flowchart LR
 ## Codex agentek és skillek
 
 - A repository-szintű közös szabályok az `AGENTS.md` fájlban vannak.
-- A `.codex/agents/` hat projektagentet tartalmaz: `architect`, `tester`, `developer`, `designer`, `product_owner` és `git_workflow`. A szerepkörök és munkaszabályok agentenként a megfelelő TOML fájlban találhatók.
+- A `.codex/agents/` hét projektagentet tartalmaz: `architect`, `tester`, `reviewer`, `developer`, `designer`, `product_owner` és `git_workflow`. A szerepkörök és munkaszabályok agentenként a megfelelő TOML fájlban találhatók. A `reviewer` csak olvas, és kiemelten vizsgálja a biztonsági kockázatokat.
 - A projekt-szintű, megosztott skillek az `.agents/skills/` alatt vannak; a `skills-lock.json` rögzíti a forrásukat és tartalomhashüket.
-- A Codex multi-agent beállítás sessionönként legfeljebb hat párhuzamos subagentet enged.
+- A Codex multi-agent beállítás sessionönként legfeljebb hét párhuzamos subagentet enged.
 - Az epic/task azonosítókhoz kötött branch-, commit- és PR-szabályokat a `docs/branching-strategy.md` írja le.
 
 ## Perzisztencia és konfiguráció
