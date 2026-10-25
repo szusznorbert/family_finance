@@ -8,8 +8,13 @@
   },
   "scripts": {
     "dev": "pnpm --parallel --filter './apps/*' dev",
-    "build": "pnpm --recursive --if-present build",
-    "lint": "pnpm --recursive --if-present lint",
-    "typecheck": "pnpm --recursive --if-present typecheck"
+    "build": "pnpm --filter api build && pnpm --filter web build",
+    "lint": "pnpm --filter web lint && eslint apps/api packages/shared/src --ext .ts,.tsx,.mts",
+    "typecheck": "pnpm --filter @household-finance/shared typecheck && pnpm --filter api typecheck && pnpm --filter web typecheck"
+  },
+  "devDependencies": {
+    "eslint": "^9",
+    "typescript": "^5",
+    "typescript-eslint": "^8"
   }
 }

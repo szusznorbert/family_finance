@@ -27,6 +27,14 @@ To run the setup steps manually, copy `.env.example` to `.env`, configure its va
 
 The API uses Prisma ORM 7.10.1 with the PostgreSQL driver adapter and Better Auth 1.7.12. Prisma migrations are kept under `apps/api/prisma/migrations`.
 
-Run `pnpm build`, `pnpm lint`, and `pnpm typecheck` from the repository root for the corresponding app checks.
+Run these quality checks from the repository root:
+
+| Command | Coverage |
+|---|---|
+| `pnpm lint` | Next.js ESLint rules for `apps/web`; TypeScript ESLint rules for `apps/api` and `packages/shared/src`. Generated API Prisma code and Next.js output are excluded. |
+| `pnpm typecheck` | Separate TypeScript checks for `packages/shared`, `apps/api`, and `apps/web`. |
+| `pnpm build` | Production builds for `apps/api` (Turbopack) and `apps/web` (Webpack); both consume the shared source package. |
+
+`packages/shared` exports TypeScript source directly and has no standalone build artifact. The web app uses Tailwind through PostCSS so its development and production CSS are processed consistently. The web production build fetches Google Fonts and therefore needs network access.
 
 For a containerized run, use `docker compose up --build -d`. The web and API ports bind to localhost; configure a reverse proxy separately for remote access.
