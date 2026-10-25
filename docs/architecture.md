@@ -19,7 +19,7 @@ family_finance/
 │   ├── web/                 Next.js webalkalmazás
 │   └── api/                 Next.js API és hitelesítési végpontok
 ├── packages/
-│   └── shared/              Kliensbiztos közös csomag váza
+│   └── shared/              Kliensbiztos API-státusz szerződés és ellenőrzés
 ├── product-owner/
 │   └── epics/               Termékepikek, taskokra bontás előtt
 ├── docs/                    Architektúra- és fejlesztői dokumentáció
@@ -44,6 +44,7 @@ flowchart LR
 
 - A web és az API külön Next.js alkalmazásként és külön Compose-szolgáltatásként van beállítva.
 - A web főoldalán backend-kapcsolatjelző van, amely a `/api/backend` útvonalon ellenőrzi az API állapotát.
+- Az API és a web a `@household-finance/shared` csomag közös `BackendStatusResponse` típusát használja; a web a hálózati JSON-t a csomag kliensbiztos ellenőrző függvényével validálja.
 - A web Next.js rewrite-ja az `/api/backend/*` kéréseket az API-ra továbbítja. Fejlesztéskor az alapcél `http://localhost:3001`; Compose alatt az `API_INTERNAL_URL=http://api:3001` érvényesül.
 - A same-origin proxy elkerüli a böngésző CORS-korlátozását. Az API állapotvégpontja a `/` útvonalon, a Better Auth végpontjai a `/api/auth/*` alatt találhatók.
 - A böngésző nem kapcsolódik közvetlenül a PostgreSQL-hez. Az adatbázis-hozzáférés az API feladata.
