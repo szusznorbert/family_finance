@@ -8,7 +8,7 @@ These instructions apply to every agent working in this repository. Read the nea
 - The stack is a pnpm monorepo with separate Next.js web and API apps, PostgreSQL, Prisma, and Better Auth.
 - `docs/architecture.md` describes the current implemented architecture. Keep implemented facts separate from plans and update the document when architecture, data flow, tools, or run commands change.
 - `product-owner/README.md` and the epic files under `product-owner/epics/` are the product-planning source of truth.
-- Product work uses task IDs in the form `EPIC-XX-TYY`; follow `docs/branching-strategy.md` for branches, commits, and PRs tied to those IDs.
+- Implementation work uses task IDs in the form `EPIC-XX-TYY`; an epic breakdown may use `plan/EPIC-XX-<epic-slug>` before its task files exist. Follow `docs/branching-strategy.md` for branch, commit, and PR rules.
 - Follow the closest `AGENTS.md` file. In particular, read the generated Next.js instructions under `apps/web/` or `apps/api/` and consult the installed Next.js documentation before changing Next.js code.
 - Relevant project skills are in `.agents/skills/`; load the skill that matches the assigned role and work. Skills supplement this file and do not override repository rules or user instructions.
 

@@ -1,6 +1,6 @@
 # Branching, commit and pull request strategy
 
-Use one task branch per product-owner task. The task ID is the link between the epic, task file, branch, commits, and pull request.
+Use one task branch per product-owner task. The task ID is the link between the epic, task file, branch, commits, and pull request. Epic planning can use a `plan/` branch before task files exist.
 
 ## Task IDs
 
@@ -11,11 +11,11 @@ Use `EPIC-XX-TYY`, where:
 
 The corresponding task file lives under `product-owner/epics/<epic-folder>/tasks/` and includes the same ID, for example `EPIC-02-T01-household-membership.md`.
 
-Do not create a task branch or task commit without an existing task ID and task file. Ask the product owner agent to create the task first.
+Do not create a task branch or task commit without an existing task ID and task file. Ask the product owner agent to create the task first. For an epic breakdown, use the epic's existing `EPIC-XX` ID and epic file on a `plan/` branch.
 
 ## Branches
 
-Format:
+Task branch format:
 
 ```text
 <branch-type>/<TASK-ID>-<short-kebab-case-slug>
@@ -36,6 +36,14 @@ fix/EPIC-02-T02-auth-redirect
 - Keep one task per branch. If work spans independent tasks, split it into separate tasks and branches unless the user explicitly asks to combine them.
 - Never do product work directly on `main`.
 
+Epic planning branch format:
+
+```text
+plan/EPIC-XX-<epic-slug>
+```
+
+Example: `plan/EPIC-01-platform-foundation`. The `EPIC-XX` ID must match an existing epic file. Use this branch to create or revise the epic plan and task files and any directly related planning rules. Keep application implementation on its later task branch.
+
 ## Commits
 
 Use Conventional Commit headers with the task ID:
@@ -54,11 +62,17 @@ docs(auth): [EPIC-02-T01] document membership decisions
 
 Every commit on a task branch must include that task ID. Keep commits focused; do not mix unrelated tasks.
 
+On a `plan/` branch, use the epic ID instead of a task ID, for example:
+
+```text
+docs(plan): [EPIC-01] define platform foundation tasks
+```
+
 ## Pull requests
 
-- Use the same task-linked Conventional Commit header as the PR title.
+- Use the same task-linked Conventional Commit header as the PR title. For an epic planning PR, use an epic-linked planning commit header as the title.
 - Target `main` unless the user or repository settings specify another base.
-- Include the task file path and summarize acceptance criteria, implementation, and verification in the PR body.
+- For a task PR, include the task file path and summarize acceptance criteria, implementation, and verification. For a planning PR, link the epic and new task files and summarize the proposed order, dependencies, and open questions.
 - Do not invent or create a GitHub issue number. The local epic-task ID is the project’s task reference.
 
 ## Git safety
