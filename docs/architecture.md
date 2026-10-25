@@ -91,7 +91,7 @@ flowchart LR
 
 ## Fejlesztői és konténeres indítás
 
-- `./scripts/dev.sh` — előkészíti a helyi `.env`-et, elindítja a PostgreSQL-t, ellenőrzi és alkalmazza a migrációt, majd indítja a webet `:3000` és az API-t `:3001` porton.
+- `./scripts/dev.sh` — ellenőrzi a Node.js, pnpm, Python 3 és Docker előfeltételeket, előkészíti a helyi `.env`-et, elindítja a PostgreSQL-t, ellenőrzi és alkalmazza a migrációt, majd indítja a webet `:3000` és az API-t `:3001` porton.
 - `pnpm dev` — a web `:3000` és az API `:3001` indítása, ha az adatbázis és a migráció már készen áll.
 - `pnpm build` — workspace build parancs.
 - `pnpm lint` — elérhető workspace lint parancsok.
