@@ -1,0 +1,15 @@
+{
+  "name": "household-finance",
+  "private": true,
+  "description": "Self-hosted household finance monorepo",
+  "packageManager": "pnpm@11.25.0",
+  "engines": {
+    "node": "^20.19 || ^22.12 || >=24.0"
+  },
+  "scripts": {
+    "dev": "pnpm --parallel --filter './apps/*' dev",
+    "build": "pnpm --recursive --if-present build",
+    "lint": "pnpm --recursive --if-present lint",
+    "typecheck": "pnpm --recursive --if-present typecheck"
+  }
+}
