@@ -9,9 +9,11 @@ Ez a dokumentum a repository jelenlegi állapotát írja le. A tervezett, de mé
 
 ```text
 family_finance/
+├── .agents/
+│   └── skills/              Projekt-szintű Codex skillek
 ├── .codex/
 │   ├── config.toml          Codex subagent concurrency configuration
-│   └── agents/              Project-scoped architect, tester, developer, and product-owner agents
+│   └── agents/              Projekt-szintű architect, tester, developer, designer, product-owner és git-workflow agentek
 ├── AGENTS.md               Shared project rules for coding agents
 ├── apps/
 │   ├── web/                 Next.js webalkalmazás
@@ -21,6 +23,7 @@ family_finance/
 ├── product-owner/
 │   └── epics/               Termékepikek, taskokra bontás előtt
 ├── docs/                    Architektúra- és fejlesztői dokumentáció
+├── skills-lock.json         A projekt-szintű skillek forrás- és hash-lockja
 ├── Dockerfile               Közös image-leírás, APP build argumentummal
 ├── docker-compose.yml       Web, API és PostgreSQL szolgáltatások
 ├── package.json             Workspace-szintű parancsok és verziók
@@ -68,11 +71,13 @@ flowchart LR
 | Better Auth Prisma adapter | 1.7.12 | Auth-adatok tárolása Prisma segítségével |
 | PostgreSQL image | 17-alpine | Compose adatbázis |
 
-## Codex agentek
+## Codex agentek és skillek
 
 - A repository-szintű közös szabályok az `AGENTS.md` fájlban vannak.
-- A `.codex/agents/` négy projektagentet tartalmaz: `architect`, `tester`, `developer` és `product_owner`. A szerepkörök, felelősségi határok és munkaszabályok agentenként a megfelelő TOML fájlban találhatók.
-- A Codex multi-agent beállítás sessionönként legfeljebb négy párhuzamos subagentet enged.
+- A `.codex/agents/` hat projektagentet tartalmaz: `architect`, `tester`, `developer`, `designer`, `product_owner` és `git_workflow`. A szerepkörök és munkaszabályok agentenként a megfelelő TOML fájlban találhatók.
+- A projekt-szintű, megosztott skillek az `.agents/skills/` alatt vannak; a `skills-lock.json` rögzíti a forrásukat és tartalomhashüket.
+- A Codex multi-agent beállítás sessionönként legfeljebb hat párhuzamos subagentet enged.
+- Az epic/task azonosítókhoz kötött branch-, commit- és PR-szabályokat a `docs/branching-strategy.md` írja le.
 
 ## Perzisztencia és konfiguráció
 
