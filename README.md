@@ -15,13 +15,13 @@ See [docs/architecture.md](docs/architecture.md) for the current repository stru
 
 ## Local development
 
-Use Node.js 24.22.1 and pnpm 11.25.0 (`corepack enable` makes the workspace package manager available). Install workspace dependencies once with `pnpm install`, then start the full local development environment from the repository root:
+Use Node.js 24.22.1, pnpm 11.25.0, Python 3, and a running Docker Engine with Compose (`corepack enable` makes the workspace package manager available). Install workspace dependencies once with `pnpm install`, then start the full local development environment from the repository root:
 
 ```bash
 ./scripts/dev.sh
 ```
 
-The script creates `.env` from `.env.example` if needed, fills the starter database password and auth secret, starts PostgreSQL, generates the Prisma client, applies the initial migration, and runs both apps. The web app is available on port 3000 and the API on port 3001. Press `Ctrl+C` to stop the apps; PostgreSQL remains running.
+The script checks the required tool versions and Docker access before changing local state. It creates `.env` from `.env.example` if needed, fills the starter database password and auth secret, starts PostgreSQL, generates the Prisma client, applies the initial migration, and runs both apps. The web app is available on port 3000 and the API on port 3001. Press `Ctrl+C` to stop the apps; PostgreSQL remains running.
 
 To run the setup steps manually, copy `.env.example` to `.env`, configure its values, start PostgreSQL with `docker compose up -d postgres`, generate the Prisma client with `pnpm --filter api prisma:generate`, and apply migrations with `pnpm --filter api exec prisma migrate dev --name init`.
 

@@ -8,12 +8,30 @@ if ! command -v node >/dev/null 2>&1; then
   echo "Hiba: Node.js nincs telepítve vagy nincs benne a PATH-ban." >&2
   exit 1
 fi
+if ! node -e 'const [major, minor] = process.versions.node.split(".").map(Number); process.exit((major === 20 && minor >= 19) || (major === 22 && minor >= 12) || major >= 24 ? 0 : 1)' >/dev/null 2>&1; then
+  echo "Hiba: A Node.js $(node --version) nem támogatott. Használd a .nvmrc szerinti Node.js verziót (24.22.1)." >&2
+  exit 1
+fi
 if ! command -v pnpm >/dev/null 2>&1; then
   echo "Hiba: pnpm nem található. Engedélyezd a Corepacket (corepack enable), majd próbáld újra." >&2
   exit 1
 fi
+EXPECTED_PNPM_VERSION="$(node -p 'require("./package.json").packageManager.split("@")[1]')"
+ACTUAL_PNPM_VERSION="$(pnpm --version 2>/dev/null || true)"
+if [[ "$ACTUAL_PNPM_VERSION" != "$EXPECTED_PNPM_VERSION" ]]; then
+  echo "Hiba: pnpm $EXPECTED_PNPM_VERSION szükséges, jelenlegi: ${ACTUAL_PNPM_VERSION:-nem futtatható}." >&2
+  exit 1
+fi
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "Hiba: Python 3 szükséges a helyi .env előkészítéséhez." >&2
+  exit 1
+fi
 if ! command -v docker >/dev/null 2>&1 || ! docker compose version >/dev/null 2>&1; then
   echo "Hiba: Docker és a Docker Compose plugin szükséges az adatbázishoz." >&2
+  exit 1
+fi
+if ! docker info >/dev/null 2>&1; then
+  echo "Hiba: A Docker daemon nem érhető el. Indítsd el a Docker Desktopot, és ellenőrizd a Docker-hozzáférést." >&2
   exit 1
 fi
 
