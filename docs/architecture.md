@@ -102,7 +102,11 @@ flowchart LR
 - `pnpm --filter api prisma:generate` — Prisma Client generálása.
 - `pnpm --filter api exec prisma migrate dev --name init` — kezdeti migráció létrehozása és alkalmazása.
 
-A gyökér `Dockerfile` az `APP=web` vagy `APP=api` build argumentummal készít külön alkalmazásimage-et. A Dockerfile jelenleg a teljes workspace-függőségeket és forrásokat használja.
+A gyökér `Dockerfile` az `APP=web` vagy `APP=api` build argumentummal készít külön alkalmazásimage-et. A Dockerfile a teljes workspace-függőségeket és forrásokat használja; a helyi Next.js-kimenet, TypeScript-cache és generált Prisma-kód kimarad a build kontextusából. A Prisma Client az API image-ben generálódik.
+
+Az API buildje csak a buildparancs idejére kap szintetikus adatbázis-URL-t és véletlen auth titkot, adatbázis-kapcsolat nélkül; ezek nem kerülnek az image környezeti változói közé. Futáskor a Compose adja a konfigurációt. A web proxycélja már buildkor `http://api:3001`, mert a Next.js a rewrite-okat buildkor rögzíti.
+
+Az API konténer indításkor `prisma migrate deploy` parancsot futtat, és csak sikeres migráció után indítja a Next.js szervert. A Compose az API-t a PostgreSQL health checkjéhez köti. Migrációs hiba esetén az API 1-es kóddal kilép, az `unless-stopped` restart policy újrapróbálja az indítást; a szerver nem válhat egészségessé, a hiba az API logjában látható. Az újraindítás a már alkalmazott migrációkat nem futtatja újra. A `docker compose up --build -d --wait` a szolgáltatások egészséges állapotáig vár.
 
 ## Jelenleg még hiányzó funkciók
 
