@@ -61,8 +61,8 @@ flowchart LR
 | Next.js | 16.4.3 | Web és API |
 | React | 19.3.0 | Web UI |
 | TypeScript | 5.9.3 | Web, API és közös csomag |
-| ESLint | 9.39.5 | Web lintelés |
-| Tailwind CSS | 4.3.3 | Web stílusok |
+| ESLint | 9.39.5 | Web, API és közös TypeScript-forrás lintelése |
+| Tailwind CSS | 4.3.3 | Web stílusok PostCSS-feldolgozással |
 | Prisma ORM | 7.10.1 | API adatbázis-hozzáférés és migrációk |
 | Prisma CLI | 7.10.1 | Sémaellenőrzés, kliensgenerálás és migrációk |
 | PostgreSQL driver adapter | `@prisma/adapter-pg` 7.10.1 | Prisma kapcsolat PostgreSQL-hez |
@@ -94,9 +94,9 @@ flowchart LR
 
 - `./scripts/dev.sh` — ellenőrzi a Node.js, pnpm, Python 3 és Docker előfeltételeket, előkészíti a helyi `.env`-et, elindítja a PostgreSQL-t, ellenőrzi és alkalmazza a migrációt, majd indítja a webet `:3000` és az API-t `:3001` porton.
 - `pnpm dev` — a web `:3000` és az API `:3001` indítása, ha az adatbázis és a migráció már készen áll.
-- `pnpm build` — workspace build parancs.
-- `pnpm lint` — elérhető workspace lint parancsok.
-- `pnpm typecheck` — TypeScript ellenőrzés.
+- `pnpm build` — az API Turbopack-, majd a web Webpack-alapú production buildje. Mindkettő a közös TypeScript-forrást használja; a `packages/shared` csomagnak nincs külön build kimenete. A web buildje a Google Fonts letöltéséhez hálózatot igényel.
+- `pnpm lint` — a web Next.js ESLint-ellenőrzése, majd az API és a `packages/shared/src` TypeScript ESLint-ellenőrzése; a generált Prisma-kód és Next.js buildkimenet kizárt.
+- `pnpm typecheck` — külön TypeScript-ellenőrzés a `packages/shared`, `apps/api` és `apps/web` csomagokra.
 - `docker compose up -d postgres` — csak az adatbázis indítása.
 - `docker compose up --build -d` — web, API és adatbázis konténeres indítása.
 - `pnpm --filter api prisma:generate` — Prisma Client generálása.
