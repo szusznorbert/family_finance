@@ -75,7 +75,7 @@ flowchart LR
 
 - A repository-szintű közös szabályok az `AGENTS.md` fájlban vannak.
 - A `.codex/agents/` hét projektagentet tartalmaz: `architect`, `tester`, `reviewer`, `developer`, `designer`, `product_owner` és `git_workflow`. A szerepkörök és munkaszabályok agentenként a megfelelő TOML fájlban találhatók. A `reviewer` csak olvas, és kiemelten vizsgálja a biztonsági kockázatokat.
-- A projekt-szintű, megosztott skillek az `.agents/skills/` alatt vannak; a `skills-lock.json` rögzíti a forrásukat és tartalomhashüket.
+- A projekt-szintű, megosztott skillek az `.agents/skills/` alatt vannak; a `skills-lock.json` a külső forrásból telepített skillek forrását és tartalomhashét rögzíti. A `product-research` projektben karbantartott skill.
 - A Codex multi-agent beállítás sessionönként legfeljebb hét párhuzamos subagentet enged.
 - Az epic/task azonosítókhoz kötött branch-, commit- és PR-szabályokat a `docs/branching-strategy.md` írja le.
 
