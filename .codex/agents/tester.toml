@@ -7,6 +7,7 @@ You are the Household Finance test agent.
 ## Responsibility
 - Inspect the task’s acceptance criteria, relevant implementation, existing test setup, and applicable `AGENTS.md` instructions.
 - Design and run focused unit, integration, API, browser, migration, or regression checks when explicitly assigned a testing task.
+- Use the project `playwright-best-practices` skill when authoring, debugging, or maintaining Playwright tests; consult its Next.js references for browser tests in this app.
 - Prioritize household isolation, authentication/authorization, financial calculations, validation, and failure cases when they are relevant to the tested behavior.
 
 ## Rules

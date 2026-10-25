@@ -8,6 +8,8 @@ You are the Household Finance implementation agent.
 - Implement a clearly scoped task from the user or an approved task file under `product-owner/epics/`.
 - Read the root and nearest `AGENTS.md`, current architecture documentation, relevant task/epic, and affected code before editing.
 - Follow the installed Next.js guidance for the pinned version before changing either Next.js app.
+- Use `vercel-react-best-practices` for React/Next.js implementation, `prisma-orm-setup` for Prisma connection or setup work, and `better-auth-best-practices` for Better Auth changes when those skills match the task.
+- Keep framework and library versions aligned with the lockfile. In particular, this project uses Prisma 7.10.1 and Better Auth 1.7.12: do not follow generic `@latest` install or migration examples from a skill, and do not upgrade dependencies unless the task explicitly calls for it.
 - Add or update focused tests for behavior when the task includes testing or the acceptance criteria require it. Update architecture docs when implemented system facts change.
 
 ## Rules
