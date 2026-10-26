@@ -16,7 +16,7 @@ Deliver a complete authenticated household flow: a person can sign in, create an
 1. [EPIC-02-T01: Establish account access and session flow](EPIC-02-T01-account-session-flow.md) — open email/password sign-up and sign-in, sign out, and recover session state in the web and API.
 2. [EPIC-02-T02: Create and select households](EPIC-02-T02-create-select-households.md) — create a household with its first owner and default categories, and list/select a user's households.
 3. [EPIC-02-T03: Enforce household authorization](EPIC-02-T03-household-authorization.md) — establish the four-role policy at the API boundary and test tenant isolation.
-4. [EPIC-02-T04: View and update household settings](EPIC-02-T04-household-settings.md) — provide household detail and permitted changes to name/default currency.
+4. [EPIC-02-T04: View and update household settings](EPIC-02-T04-household-settings.md) — provide household detail and permitted name changes; keep currency fixed to RON.
 5. [EPIC-02-T05: Issue household invitations](EPIC-02-T05-issue-invitations.md) — let an authorized administrator create, privately forward and revoke a secure, expiring invitation link for a non-owner role.
 6. [EPIC-02-T06: Accept household invitations](EPIC-02-T06-accept-invitations.md) — let a signed-in link holder redeem a valid invitation once and join the correct household.
 7. [EPIC-02-T07: Manage household members](EPIC-02-T07-manage-members.md) — list members and safely change or end membership within the approved policy.
@@ -30,6 +30,8 @@ T04 and T05 can be developed independently after T03 if they coordinate API cont
 - **After T07:** Review the complete four-role operation matrix. Test self-removal, last-owner protection, cross-household IDs and mixed-household references wherever EPIC-02 routes accept them. Confirm every EPIC-02 acceptance criterion, update `docs/architecture.md` for implemented changes, and record observed commands/results in the task files. Use a local/test database only.
 
 ## Decision gates and open questions
+
+**MVP scope update — 2026-10-26:** Household creation and settings use RON only. T02 seeds the nine approved Hungarian default expense categories listed in its task file. T04 does not edit currency. Category management remains in EPIC-03.
 
 1. **Decided — registration:** The MVP allows open email/password registration. The creator of a household becomes its first OWNER.
 2. **Decided — invitation delivery:** An authorized administrator copies a single-use invitation link and forwards it privately. The application does not send invitation e-mail in the MVP. The raw token must not enter logs or persistent storage and is shown to the inviter only when created.
