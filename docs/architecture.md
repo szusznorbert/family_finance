@@ -36,7 +36,7 @@ family_finance/
 ```mermaid
 flowchart LR
     Browser[Browser] --> Web[Next.js web :3000]
-    Web -- same-origin /api/backend/* rewrite --> API[Next.js API :3001]
+    Web -- same-origin /api/backend/*, /api/auth/*, /api/v1/* rewrites --> API[Next.js API :3001]
     API --> Auth[Better Auth /api/auth/*]
     API --> Prisma[Prisma Client]
     Prisma --> DB[(PostgreSQL :5432)]
@@ -45,8 +45,10 @@ flowchart LR
 - A web és az API külön Next.js alkalmazásként és külön Compose-szolgáltatásként van beállítva.
 - A web főoldalán backend-kapcsolatjelző van, amely a `/api/backend` útvonalon ellenőrzi az API állapotát.
 - Az API és a web a `@household-finance/shared` csomag közös `BackendStatusResponse` típusát használja; a web a hálózati JSON-t a csomag kliensbiztos ellenőrző függvényével validálja.
-- A web Next.js rewrite-ja az `/api/backend/*` kéréseket az API-ra továbbítja. Fejlesztéskor az alapcél `http://localhost:3001`; Compose alatt az `API_INTERNAL_URL=http://api:3001` érvényesül.
-- A same-origin proxy elkerüli a böngésző CORS-korlátozását. Az API állapotvégpontja a `/` útvonalon, a Better Auth végpontjai a `/api/auth/*` alatt találhatók.
+- A web Next.js rewrite-ja az `/api/backend/*`, `/api/auth/*` és `/api/v1/*` kéréseket az API-ra továbbítja. Fejlesztéskor az alapcél `http://localhost:3001`; Compose alatt az `API_INTERNAL_URL=http://api:3001` érvényesül.
+- A same-origin proxy elkerüli a böngésző CORS-korlátozását, és a Better Auth munkamenet-sütije a web originjén működik. Az API állapotvégpontja a `/` útvonalon, a Better Auth végpontjai a `/api/auth/*` alatt találhatók.
+- A web a Better Auth 1.7.12 React kliensével regisztrál, jelentkeztet be és ki, valamint ellenőrzi a munkamenetet. Az API `GET /api/v1/me` végpontja a szerveroldali munkamenetből adja vissza a felhasználó alapadatait, vagy 401-et ad hitelesítés nélkül. A böngésző által küldött `userId` nem szolgál azonosításként.
+- A Better Auth nyilvános base URL-je és engedélyezett originje a `WEB_ORIGIN` értékéből származik (`http://localhost:3000` alapértelmezés), mert a böngésző az auth végpontot a web proxyn keresztül éri el. Az API belső címe ettől független.
 - A böngésző nem kapcsolódik közvetlenül a PostgreSQL-hez. Az adatbázis-hozzáférés az API feladata.
 - Nincs beállítva reverse proxy. A Compose-portok jelenleg csak a localhost interfészre vannak kötve.
 
@@ -67,7 +69,7 @@ flowchart LR
 | Prisma CLI | 7.10.1 | Sémaellenőrzés, kliensgenerálás és migrációk |
 | PostgreSQL driver adapter | `@prisma/adapter-pg` 7.10.1 | Prisma kapcsolat PostgreSQL-hez |
 | PostgreSQL driver | `pg` 8.23.1 | Node.js PostgreSQL kapcsolat |
-| Better Auth | 1.7.12 | API hitelesítés email/jelszóval |
+| Better Auth | 1.7.12 | API hitelesítés és webes React kliens email/jelszóval |
 | Better Auth CLI | 1.7.12 | Auth séma generálása és ellenőrzése |
 | Better Auth Prisma adapter | 1.7.12 | Auth-adatok tárolása Prisma segítségével |
 | PostgreSQL image | 17-alpine | Compose adatbázis |
@@ -110,13 +112,12 @@ Az API konténer indításkor `prisma migrate deploy` parancsot futtat, és csak
 
 ## Jelenleg még hiányzó funkciók
 
-- Webes bejelentkezési felület és Better Auth klienskonfiguráció.
 - Háztartások, tagságok, szerepkörök, kategóriák és pénzügyi adatmodellek.
-- Verziózott `/api/v1` üzleti végpontok, validáció és egységes hibaválaszok.
+- További verziózott `/api/v1` üzleti végpontok, validáció és egységes hibaválaszok a `me` végponton túl.
 - Receipt, bill, vehicle és document adatmodellek és üzleti folyamatok.
 - E-mailes meghívás és emlékeztető-küldés.
 - Privát dokumentumtár, reverse proxy, éles telepítési és visszaállítási folyamat.
-- Automatizált tesztcsomag.
+- Automatizált tesztcsomag. Az EPIC-02-T01 jelenleg szintetikus adatokkal végzett kézi API- és böngészős ellenőrzéssel rendelkezik.
 
 ## Frissítési szabály
 
