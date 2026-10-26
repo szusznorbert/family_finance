@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 
-type HouseholdRole = "OWNER" | "ADMIN" | "MEMBER" | "VIEWER";
+type HouseholdRole = "OWNER" | "MEMBER" | "VIEWER";
 
 type Household = {
   id: string;
@@ -24,7 +24,7 @@ function isHousehold(value: unknown): value is Household {
     typeof household.name === "string" &&
     household.currency === "RON" &&
     typeof household.createdAt === "string" &&
-    ["OWNER", "ADMIN", "MEMBER", "VIEWER"].includes(String(household.role)) &&
+    ["OWNER", "MEMBER", "VIEWER"].includes(String(household.role)) &&
     Array.isArray(household.categories) &&
     household.categories.every(
       (category) =>
@@ -259,7 +259,7 @@ export default function HouseholdsPanel() {
                         {selected && <span className="text-xs font-semibold text-emerald-900">Kiválasztva</span>}
                       </span>
                       <span className="mt-1 block text-sm text-slate-600">
-                        {household.currency} · {household.role === "OWNER" ? "Tulajdonos" : "Tag"} · {household.categories.length} kategória
+                        {household.currency} · {household.role === "OWNER" ? "Tulajdonos" : household.role === "VIEWER" ? "Megtekintő" : "Tag"} · {household.categories.length} kategória
                       </span>
                     </span>
                   </label>

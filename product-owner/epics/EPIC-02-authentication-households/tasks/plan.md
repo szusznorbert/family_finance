@@ -6,42 +6,45 @@ Deliver a complete authenticated household flow: a person can sign in, create an
 
 ## Current evidence
 
-- Better Auth email/password endpoints and the Prisma `User`, `Session`, `Account` and `Verification` models are configured in the API. There is no web auth client or sign-in UI yet.
-- The web currently proxies `/api/backend/*` to the separate API. Browser-to-API auth requests and their session behavior need an agreed same-origin integration.
-- Household, membership, invitation and category models, business routes, and household policy helpers do not yet exist.
-- The epic requires four roles, multiple households per user, default categories, invitations, and isolation even when foreign resource IDs are supplied. The attached technical specification provides a *suggested* role policy and routes; these are planning inputs, not approved product decisions.
+- T01 provides Better Auth email/password, web registration/sign-in and session access; the web proxies `/api/auth/*` and `/api/v1/*` to the separate API.
+- T02's household, membership and category implementation is open in PR #10. Its original, already-applied migration introduced an extra ADMIN enum value; a follow-on correction is prepared in the active branch and must meet the [T02 merge gate](EPIC-02-T02-create-select-households.md) before merging.
+- There is no ID-scoped household route or reusable household policy helper yet.
+- The accepted role set is OWNER, MEMBER and VIEWER. The attached technical specification's four-role baseline is superseded by this product decision.
 
 ## Task order and dependencies
 
 1. [EPIC-02-T01: Establish account access and session flow](EPIC-02-T01-account-session-flow.md) — open email/password sign-up and sign-in, sign out, and recover session state in the web and API.
-2. [EPIC-02-T02: Create and select households](EPIC-02-T02-create-select-households.md) — create a household with its first owner and default categories, and list/select a user's households.
-3. [EPIC-02-T03: Enforce household authorization](EPIC-02-T03-household-authorization.md) — establish the four-role policy at the API boundary and test tenant isolation.
+2. [EPIC-02-T02: Create and select households](EPIC-02-T02-create-select-households.md) — create a household with its first OWNER and default categories, and list/select a user's households.
+3. [EPIC-02-T03: Enforce household authorization](EPIC-02-T03-household-authorization.md) — establish session/membership checks and a reusable three-role API policy for later ID-scoped routes.
 4. [EPIC-02-T04: View and update household settings](EPIC-02-T04-household-settings.md) — provide household detail and permitted name changes; keep currency fixed to RON.
-5. [EPIC-02-T05: Issue household invitations](EPIC-02-T05-issue-invitations.md) — let an authorized administrator create, privately forward and revoke a secure, expiring invitation link for a non-owner role.
+5. [EPIC-02-T05: Issue household invitations](EPIC-02-T05-issue-invitations.md) — let an OWNER create, privately forward and revoke a secure, expiring invitation link for an approved role.
 6. [EPIC-02-T06: Accept household invitations](EPIC-02-T06-accept-invitations.md) — let a signed-in link holder redeem a valid invitation once and join the correct household.
 7. [EPIC-02-T07: Manage household members](EPIC-02-T07-manage-members.md) — list members and safely change or end membership within the approved policy.
 
 T04 and T05 can be developed independently after T03 if they coordinate API contracts. T07 can start after T03 independently of the invitation screens, but its integration verification depends on T06.
 
-**T02 pre-implementation planning pass — 2026-10-26:** T02 remains one bounded household-onboarding vertical slice after T01: persistence and transaction, then authenticated create/list API, then web create/list/select. The [T02 task record](EPIC-02-T02-create-select-households.md) contains likely files, authorization/data-integrity risks, the planned in-place manual scenarios and the EPIC-05 product-history boundary. It was completed before T02 code changes and preserved here afterward. No new blocking product decision was identified.
+**T02 pre-implementation planning pass — 2026-10-26:** Keep T02 as one bounded household-onboarding vertical slice. It depends on the T01 session and `/api/v1/*` proxy flow; implement persistence/transaction first, then authenticated create/list API, then the web create/list/select UI. The [T02 task record](EPIC-02-T02-create-select-households.md) names likely files, authorization and rollback risks, and exact manual checks in the already running local app with synthetic data. There is no new blocking product decision. Product-level receipt items and price history remain in EPIC-05; cheapest-store optimization is outside the MVP.
+
+**Role decision and PR #10 gate — 2026-10-26:** OWNER, MEMBER and VIEWER are the only accepted roles. The T02 creator remains OWNER. Include and review the data-preserving follow-on migration that removes the unused ADMIN enum, align the Prisma Client and web role contract, and manually recheck existing/new households before merge. ADMIN-to-OWNER conversion is compatibility handling for any legacy/manual ADMIN rows; the observed T02-created memberships were already OWNER. The [T02 task file](EPIC-02-T02-create-select-households.md) records the checks. T03 follows that correction.
 
 ## Checkpoints
 
-- **After T01–T03:** Two synthetic accounts can authenticate; one account can create and select two households; a nonmember cannot read or mutate a foreign household through the API, and each role's permitted operations follow the approved matrix. Run focused API checks plus root lint/typecheck/build.
-- **After T04–T06:** An authorized account can create, copy and revoke an invitation; a signed-in link holder can accept a valid link exactly once. Invalid, expired, revoked and reused tokens fail without creating membership. Verify concurrent acceptance and the browser/API flow with synthetic data.
-- **After T07:** Review the complete four-role operation matrix. Test self-removal, last-owner protection, cross-household IDs and mixed-household references wherever EPIC-02 routes accept them. Confirm every EPIC-02 acceptance criterion, update `docs/architecture.md` for implemented changes, and record observed commands/results in the task files. Use a local/test database only.
+- **After T01–T03:** Two synthetic accounts can authenticate; one account can create and select two households; each collection list is limited to the caller's memberships. T03 establishes 401/404/403 policy but does not claim role-specific allow/deny examples before ID-scoped operations exist. Check flows manually in the existing local app/API; run lint/typecheck/build as quality checks without adding automated tests.
+- **After T04–T06:** OWNER can rename and manage invitations; MEMBER/VIEWER cannot mutate those resources. A signed-in link holder can accept a valid link exactly once. Verify 401 without a session, 404 for nonmember/foreign IDs and 403 for members with insufficient role, plus expired/revoked/reused invitations, manually with synthetic data.
+- **After T07:** Review the complete three-role operation matrix. Check self-removal, last-OWNER protection, cross-household IDs and mixed-household references wherever EPIC-02 routes accept them. Confirm every EPIC-02 acceptance criterion, update `docs/architecture.md` for implemented changes, and record observed commands/results in the task files. Use a local/test database only.
 
 ## Decision gates and open questions
 
 **MVP scope update — 2026-10-26:** Household creation and settings use RON only. T02 seeds the nine approved Hungarian default expense categories listed in its task file. T04 does not edit currency. Category management remains in EPIC-03.
 
 1. **Decided — registration:** The MVP allows open email/password registration. The creator of a household becomes its first OWNER.
-2. **Decided — invitation delivery:** An authorized administrator copies a single-use invitation link and forwards it privately. The application does not send invitation e-mail in the MVP. The raw token must not enter logs or persistent storage and is shown to the inviter only when created.
-3. **Open — role matrix:** Confirm the operations allowed to VIEWER, MEMBER, ADMIN and OWNER, including household settings, invitations, member role changes, removal and category management. The specification's matrix is a proposal. Decide before T03.
-4. **Open — owner lifecycle:** Define who can transfer ownership, whether an owner can leave, and whether removing the last owner is always forbidden. Decide before T07. Account deletion is outside this epic until financial-record retention is defined.
-5. **Decided — link holder:** Possession of the link is sufficient to accept after sign-in. The e-mail entered by the administrator is informational and does not verify or restrict the accepting account. If the link is forwarded, a different signed-in account can accept it. The UI must explain this to the inviter.
-6. **Open — invitation policy:** Set link lifetime and duplicate/reinvite behavior, and decide what happens if an existing member uses a new link. T05/T06 must make revocation and concurrent single-use acceptance effective.
-7. **Open — category boundary:** EPIC-02 seeds household-specific defaults. Category create/edit/archive belongs to EPIC-03 unless the product owner explicitly changes the epic boundary.
+2. **Decided — roles:** OWNER manages household settings and invitations; MEMBER is an ordinary member for later permitted financial actions; VIEWER is read-only. Every household must retain at least one OWNER. The detailed member-role change and exit flow is resolved in T07.
+3. **Decided — API errors:** Use 401 without a session, 404 for a missing household or nonmember/foreign household ID, and 403 for a member whose role does not allow the operation. Collection list/create routes remain session-scoped without a target household ID.
+4. **Decided — invitation delivery:** An OWNER copies a single-use invitation link and forwards it privately. The application does not send invitation e-mail in the MVP. The raw token must not enter logs or persistent storage and is shown to the inviter only when created.
+5. **Decided — link holder:** Possession of the link is sufficient to accept after sign-in. The e-mail entered by the OWNER is informational and does not verify or restrict the accepting account. If the link is forwarded, a different signed-in account can accept it. The UI must explain this to the inviter.
+6. **Open — ownership lifecycle:** Decide the exact atomic OWNER transfer and last-OWNER departure flow, including whether OWNER can be granted through invitation. The at-least-one-OWNER invariant is already approved. Account deletion is outside this epic until financial-record retention is defined.
+7. **Open — invitation policy:** Set link lifetime and duplicate/reinvite behavior, and decide what happens if an existing member uses a new link. T05/T06 must make revocation and concurrent single-use acceptance effective.
+8. **Open — category boundary:** EPIC-02 seeds household-specific defaults. Category create/edit/archive belongs to EPIC-03 unless the product owner explicitly changes the epic boundary.
 
 ## Coverage boundary
 

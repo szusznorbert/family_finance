@@ -2,7 +2,7 @@
 
 ## Goal and user value
 
-Members can view the household they are using; authorized administrators can correct its name.
+Members can view the household they are using; an OWNER can correct its name.
 
 ## Scope
 
@@ -11,7 +11,7 @@ Add household detail and permitted name updates in the API and web. Apply the T0
 ## Acceptance criteria
 
 - [ ] A current member can view the selected household's name, default currency and their role; an unrelated account cannot retrieve it by ID.
-- [ ] Only roles approved for settings changes can update the name; invalid input, lower-privilege direct API requests and attempts to change the currency leave the record unchanged.
+- [ ] Only OWNER can update the name; MEMBER and VIEWER direct API requests, invalid input and attempts to change the currency leave the record unchanged.
 - [ ] A user belonging to two households can update one without changing the other, and the web reflects the saved value after reload.
 
 ## Verification
@@ -25,4 +25,4 @@ EPIC-02-T03. May proceed independently of invitations after the settings permiss
 
 ## Non-goals and open questions
 
-Currency editing and conversion, financial transaction behavior and household deletion are outside this task. Confirm which roles may rename a household.
+Currency editing and conversion, financial transaction behavior and household deletion are outside this task. T03 supplies the 401/404/403 API policy: missing session, foreign or missing household, and member with insufficient role, respectively.
