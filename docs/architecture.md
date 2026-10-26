@@ -49,6 +49,7 @@ flowchart LR
 - A same-origin proxy elkerüli a böngésző CORS-korlátozását, és a Better Auth munkamenet-sütije a web originjén működik. Az API állapotvégpontja a `/` útvonalon, a Better Auth végpontjai a `/api/auth/*` alatt találhatók.
 - A web a Better Auth 1.7.12 React kliensével regisztrál, jelentkeztet be és ki, valamint ellenőrzi a munkamenetet. Az API `GET /api/v1/me` végpontja a szerveroldali munkamenetből adja vissza a felhasználó alapadatait, vagy 401-et ad hitelesítés nélkül. A böngésző által küldött `userId` nem szolgál azonosításként.
 - Az API `GET` és `POST /api/v1/households` végpontjai a Better Auth szerveroldali munkamenetéből veszik a felhasználóazonosítót. A listavégpont csak a felhasználó tagságait adja vissza. A létrehozás egy Prisma-tranzakcióban menti a háztartást, az első `OWNER` tagságot és a kilenc alapértelmezett kategóriát; a pénznem `RON`, más pénznemű kérés elutasításra kerül.
+- A későbbi, háztartásazonosítót célzó API-útvonalak újrahasználhatják az `authorizeHouseholdOperation` segédet. Minden híváskor a Better Auth munkamenetből származó felhasználóhoz friss `HouseholdMember` rekordot keres: munkamenet nélkül `401`, nemlétező vagy nem taghoz tartozó háztartásnál egységes `404`, a művelethez kevés szerepkörnél `403` a válasz. A `read` műveletet mindhárom (`OWNER`, `MEMBER`, `VIEWER`), a `financial-write` műveletet `OWNER` és `MEMBER`, a `manage` műveletet csak `OWNER` végezheti. A jelenlegi háztartáslista/létrehozás útvonalak továbbra is saját, munkamenet-alapú tagságszűrést használnak, mert nincs bennük cél-háztartásazonosító.
 - A web bejelentkezés után a tagságlistából kínál háztartás-kiválasztást. A kiválasztott háztartás azonosítója `household-selection:v1` kulccsal, minimális böngészőoldali preferenciaként tárolódik; ez nem jogosultsági adat, a szerveroldali API mindig a munkamenet és tagság alapján ellenőriz.
 - A Better Auth nyilvános base URL-je és engedélyezett originje a `WEB_ORIGIN` értékéből származik (`http://localhost:3000` alapértelmezés), mert a böngésző az auth végpontot a web proxyn keresztül éri el. Az API belső címe ettől független.
 - A böngésző nem kapcsolódik közvetlenül a PostgreSQL-hez. Az adatbázis-hozzáférés az API feladata.
@@ -117,6 +118,7 @@ Az API konténer indításkor `prisma migrate deploy` parancsot futtat, és csak
 - Kategóriák szerkesztése/archiválása és a szerepkörök teljes engedélyezési mátrixa.
 - Pénzügyi főkönyv és tranzakció-adatmodellek.
 - További verziózott `/api/v1` üzleti végpontok, validáció és egységes hibaválaszok a `me` végponton túl.
+- Háztartásazonosítós üzleti végpont még nincs; a policy helper a T04-től létrejövő ilyen útvonalakon lesz használva, ahol a `404` és `403` viselkedés is valódi műveleteken ellenőrizhető.
 - Receipt, bill, vehicle és document adatmodellek és üzleti folyamatok.
 - E-mailes meghívás és emlékeztető-küldés.
 - Privát dokumentumtár, reverse proxy, éles telepítési és visszaállítási folyamat.
