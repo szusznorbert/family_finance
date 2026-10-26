@@ -13,6 +13,10 @@ The corresponding task file lives under `product-owner/epics/<epic-folder>/tasks
 
 Do not create a task branch or task commit without an existing task ID and task file. Ask the product owner agent to create the task first. For an epic breakdown, use the epic's existing `EPIC-XX` ID and epic file on a `plan/` branch.
 
+## Pre-implementation planning gate
+
+Before the first code edit for every implementation task, run a read-only planning pass with the `planning-and-task-breakdown` skill and the `product_owner` agent. Record the date, scope, likely files, dependencies, acceptance and verification steps, and unresolved decisions in the task file. The developer checks that record before coding; if it is missing or stale, run the planning pass first. This applies to small tasks as well. Planning does not require switching the app's Plan mode or separate user approval unless a product decision is unresolved.
+
 ## Branches
 
 Task branch format:

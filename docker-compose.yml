@@ -28,7 +28,6 @@ services:
       NODE_ENV: production
       DATABASE_URL: postgresql://${POSTGRES_USER:-family_finance}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/${POSTGRES_DB:-family_finance}?schema=public
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?Set BETTER_AUTH_SECRET in .env}
-      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3001}
       WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:3000}
     ports:
       - "127.0.0.1:3001:3001"

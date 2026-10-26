@@ -1,4 +1,5 @@
 import BackendStatus from "./backend-status";
+import AccountStatus from "./account-status";
 
 export default function Home() {
   return (
@@ -11,8 +12,9 @@ export default function Home() {
           Fejlesztői környezet
         </h1>
         <p className="mt-3 max-w-xl text-slate-600">
-          A webalkalmazás és a backend kapcsolatának ellenőrzése.
+          Jelentkezz be a fiókodba. A háztartások kezelése a következő fejlesztési lépésben érkezik.
         </p>
+        <AccountStatus />
         <BackendStatus />
       </section>
     </main>
