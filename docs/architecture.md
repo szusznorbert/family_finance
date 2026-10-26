@@ -90,8 +90,8 @@ flowchart LR
 - A `DATABASE_URL` és a Better Auth beállításai a repository gyökerében lévő `.env` fájlból származnak. A `.env.example` csak minta; a titkos kulcsot helyben kell generálni.
 - A Prisma konfiguráció az `apps/api/prisma.config.ts` fájlban van. A séma az `apps/api/prisma/schema.prisma` fájlban, a migrációk az `apps/api/prisma/migrations/` könyvtárban találhatók.
 - A Prisma Client generált fájljai az `apps/api/src/generated/prisma/` könyvtárba kerülnek; ez a könyvtár Git-ignore alatt van.
-- A séma a Better Auth `User`, `Session`, `Account` és `Verification` modelljei mellett tartalmazza a `Household`, `HouseholdMember` és `ExpenseCategory` modelleket, valamint a négy szerepet felsoroló `HouseholdRole` enumot. A háztartások pénzneme alapértelmezetten `RON`; az API ezen kívül nem fogad el más pénznemet.
-- Az `init` és `20261026074859_add_households` migráció létrejött; mindkettő alkalmazva lett a helyi PostgreSQL-adatbázisra.
+- A séma a Better Auth `User`, `Session`, `Account` és `Verification` modelljei mellett tartalmazza a `Household`, `HouseholdMember` és `ExpenseCategory` modelleket, valamint a `HouseholdRole` enumot. Az elfogadott szerepek `OWNER`, `MEMBER` és `VIEWER`; a szerepcserélő migráció a korábbi `ADMIN` tagságokat `OWNER`-ré alakítja. A háztartások pénzneme alapértelmezetten `RON`; az API ezen kívül nem fogad el más pénznemet.
+- Az `init`, `20261026074859_add_households` és `20261026101718_restrict_household_roles` migráció létrejött; mind alkalmazva lett a helyi PostgreSQL-adatbázisra.
 - Fájlok privát tárolása, feltöltési kötet és mentési folyamat még nincs beállítva.
 
 ## Fejlesztői és konténeres indítás

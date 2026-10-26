@@ -35,6 +35,12 @@ This planning round was completed before T02 implementation; its record was tran
 
 Implementation verification recorded 2026-10-26: two local-only synthetic accounts were used (`t02-alpha@example.test`, `t02-beta@example.test`). Alpha created `T02 Alpha Household One` and `T02 Alpha Household Two`; each showed RON, OWNER and all nine approved categories. Switching to the first household persisted through a page reload. Beta's list showed no households. An unauthenticated `GET /api/v1/households` returned 401. In a later manual API pass, synthetic account sign-in returned HTTP 200; EUR input and a blank name each returned 400 `VALIDATION_ERROR` with the expected messages. The session cookie used for those requests remained in a temporary `/private/tmp` file, was deleted by a shell trap, and was never printed. Transaction rollback was not forced manually; the reviewer confirmed the create operation uses Prisma `$transaction`. API and web TypeScript checks and lint passed; no automated tests were run.
 
+## PR #10 merge gate — accepted role set, 2026-10-26
+
+Only `OWNER`, `MEMBER` and `VIEWER` are accepted household roles. The creator and household creation response remain `OWNER`. Keep `ADMIN` out of the Prisma schema and client/UI role validation. Do not edit the already-applied `20261026074859_add_households` migration; apply a follow-on PostgreSQL migration that maps any stored `ADMIN` membership to `OWNER` and safely replaces the enum while preserving household memberships. This mapping is for compatibility with possible legacy or manually entered ADMIN rows: all memberships observed from the actual T02 creation flow were already OWNER.
+
+Corrective verification recorded 2026-10-26: migration `20261026101718_restrict_household_roles` applied to the existing local synthetic database. The two preexisting Alpha households and a new post-migration household were manually listed through the API and shown in the UI as `OWNER`; the new household had all nine categories. The API response and UI role contract contain only `OWNER`, `MEMBER` and `VIEWER`; no-session `GET /api/v1/households` returned 401 after migration. The inspected synthetic records already had OWNER memberships, so the legacy ADMIN-to-OWNER data-conversion branch was not exercised against a row. The migration preserves other memberships and maps ADMIN to OWNER transactionally. No automated tests were added or run.
+
 ## Dependencies
 
 EPIC-02-T01. Open registration is approved; the authenticated creator becomes the household's first OWNER.
