@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { validateSameOriginJsonMutation } from "@/lib/csrf-protection";
 
 const responseHeaders = { "Cache-Control": "no-store" };
 
@@ -70,6 +71,9 @@ export async function POST(request: Request) {
   if (!session) {
     return apiError(401, "UNAUTHENTICATED", "Bejelentkezés szükséges.");
   }
+
+  const csrfError = validateSameOriginJsonMutation(request);
+  if (csrfError) return csrfError;
 
   let body: unknown;
   try {

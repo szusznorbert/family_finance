@@ -8,16 +8,17 @@ datasource db {
 }
 
 model User {
-  id                   String            @id
+  id                   String                @id
   name                 String
   email                String
-  emailVerified        Boolean           @default(false)
+  emailVerified        Boolean               @default(false)
   image                String?
-  createdAt            DateTime          @default(now())
-  updatedAt            DateTime          @updatedAt
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
   sessions             Session[]
   accounts             Account[]
   householdMemberships HouseholdMember[]
+  invitationsSent      HouseholdInvitation[]
 
   @@unique([email])
   @@map("user")
@@ -32,16 +33,47 @@ enum HouseholdRole {
 }
 
 model Household {
-  id         String            @id @default(cuid())
-  name       String            @db.VarChar(100)
-  currency   String            @default("RON") @db.VarChar(3)
-  createdAt  DateTime          @default(now())
-  updatedAt  DateTime          @updatedAt
-  members    HouseholdMember[]
-  categories ExpenseCategory[]
+  id                String                      @id @default(cuid())
+  name              String                      @db.VarChar(100)
+  currency          String                      @default("RON") @db.VarChar(3)
+  createdAt         DateTime                    @default(now())
+  updatedAt         DateTime                    @updatedAt
+  members           HouseholdMember[]
+  categories        ExpenseCategory[]
+  invitations       HouseholdInvitation[]
+  memberAuditEvents HouseholdMemberAuditEvent[]
 
   @@index([createdAt])
   @@map("household")
+}
+
+enum HouseholdInvitationStatus {
+  PENDING
+  ACCEPTED
+  REVOKED
+  EXPIRED
+
+  @@map("household_invitation_status")
+}
+
+model HouseholdInvitation {
+  id              String                    @id @default(cuid())
+  householdId     String
+  invitedByUserId String
+  email           String                    @db.VarChar(254)
+  normalizedEmail String                    @db.VarChar(254)
+  role            HouseholdRole
+  tokenHash       String                    @unique @db.Char(64)
+  status          HouseholdInvitationStatus @default(PENDING)
+  expiresAt       DateTime
+  createdAt       DateTime                  @default(now())
+  updatedAt       DateTime                  @updatedAt
+  household       Household                 @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  invitedBy       User                      @relation(fields: [invitedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([householdId, status, expiresAt])
+  @@index([invitedByUserId, createdAt])
+  @@map("household_invitation")
 }
 
 model HouseholdMember {
@@ -55,6 +87,29 @@ model HouseholdMember {
   @@id([householdId, userId])
   @@index([userId, createdAt])
   @@map("household_member")
+}
+
+enum HouseholdMemberAuditAction {
+  ROLE_CHANGED
+  MEMBER_REMOVED
+  MEMBER_LEFT
+
+  @@map("household_member_audit_action")
+}
+
+model HouseholdMemberAuditEvent {
+  id           String                     @id @default(cuid())
+  householdId  String
+  actorUserId  String
+  targetUserId String
+  action       HouseholdMemberAuditAction
+  previousRole HouseholdRole?
+  newRole      HouseholdRole?
+  createdAt    DateTime                   @default(now())
+  household    Household                  @relation(fields: [householdId], references: [id], onDelete: Cascade)
+
+  @@index([householdId, createdAt])
+  @@map("household_member_audit_event")
 }
 
 model ExpenseCategory {
