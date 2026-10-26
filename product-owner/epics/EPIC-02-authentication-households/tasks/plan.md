@@ -2,7 +2,7 @@
 
 ## Overview
 
-Deliver a complete authenticated household flow: a person can sign in, create and choose a household, invite another person, and use only the households and operations their membership permits. The API remains the authority for identity, membership and role checks. The seven tasks below are planning proposals; no application behavior is implemented by this plan.
+Deliver a complete authenticated household flow: a person can sign in, create and choose a household, invite another person, and use only the households and operations their membership permits. The API remains the authority for identity, membership and role checks. The eight tasks below are planning proposals; no application behavior is implemented by this plan.
 
 ## Current evidence — 2026-10-26
 
@@ -16,13 +16,14 @@ Deliver a complete authenticated household flow: a person can sign in, create an
 
 1. [EPIC-02-T01: Establish account access and session flow](EPIC-02-T01-account-session-flow.md) — open email/password sign-up and sign-in, sign out, and recover session state in the web and API.
 2. [EPIC-02-T02: Create and select households](EPIC-02-T02-create-select-households.md) — create a household with its first OWNER and default categories, and list/select a user's households.
-3. [EPIC-02-T03: Enforce household authorization](EPIC-02-T03-household-authorization.md) — establish session/membership checks and a reusable three-role API policy for later ID-scoped routes.
-4. [EPIC-02-T04: View and update household settings](EPIC-02-T04-household-settings.md) — provide household detail and permitted name changes; keep currency fixed to RON.
-5. [EPIC-02-T05: Issue household invitations](EPIC-02-T05-issue-invitations.md) — let an OWNER create, privately forward and revoke a secure, expiring invitation link for an approved role.
-6. [EPIC-02-T06: Accept household invitations](EPIC-02-T06-accept-invitations.md) — let a signed-in link holder redeem a valid invitation once and join the correct household.
-7. [EPIC-02-T07: Manage household members](EPIC-02-T07-manage-members.md) — list members and safely change or end membership within the approved policy.
+3. [EPIC-02-T08: Protect credential forms from native GET submission](EPIC-02-T08-protect-native-auth-form-submission.md) — urgent T01 security fix before wider authentication testing or external exposure.
+4. [EPIC-02-T03: Enforce household authorization](EPIC-02-T03-household-authorization.md) — establish session/membership checks and a reusable three-role API policy for later ID-scoped routes.
+5. [EPIC-02-T04: View and update household settings](EPIC-02-T04-household-settings.md) — provide household detail and permitted name changes; keep currency fixed to RON.
+6. [EPIC-02-T05: Issue household invitations](EPIC-02-T05-issue-invitations.md) — let an OWNER create, privately forward and revoke a secure, expiring invitation link for an approved role.
+7. [EPIC-02-T06: Accept household invitations](EPIC-02-T06-accept-invitations.md) — let a signed-in link holder redeem a valid invitation once and join the correct household.
+8. [EPIC-02-T07: Manage household members](EPIC-02-T07-manage-members.md) — list members and safely change or end membership within the approved policy.
 
-T04 and T05 can be developed independently after T03 if they coordinate API contracts. T07 can start after T03 independently of the invitation screens, but its integration verification depends on T06.
+T08 depends only on T01 and can be fixed independently of T03; its task ID reflects discovery order, while its execution comes before further credential-flow testing or external exposure. T04 and T05 can be developed independently after T03 if they coordinate API contracts. T07 can start after T03 independently of the invitation screens, but its integration verification depends on T06.
 
 **T02 pre-implementation planning pass — 2026-10-26:** Keep T02 as one bounded household-onboarding vertical slice. It depends on the T01 session and `/api/v1/*` proxy flow; implement persistence/transaction first, then authenticated create/list API, then the web create/list/select UI. The [T02 task record](EPIC-02-T02-create-select-households.md) names likely files, authorization and rollback risks, and exact manual checks in the already running local app with synthetic data. There is no new blocking product decision. Product-level receipt items and price history remain in EPIC-05; cheapest-store optimization is outside the MVP.
 
@@ -30,6 +31,7 @@ T04 and T05 can be developed independently after T03 if they coordinate API cont
 
 ## Checkpoints
 
+- **Before wider authentication testing or external exposure:** Complete T08 and manually check login and registration without JavaScript and, where possible, before hydration. Synthetic credentials must not appear in URLs, history or access logs; hydrated Better Auth submission still works.
 - **After T01–T03:** Two synthetic accounts can authenticate; one account can create and select two households; each collection list is limited to the caller's memberships. T03 establishes 401/404/403 policy but does not claim role-specific allow/deny examples before ID-scoped operations exist. Check flows manually in the existing local app/API; run lint/typecheck/build as quality checks without adding automated tests.
 - **After T04–T06:** OWNER can rename and manage invitations; MEMBER/VIEWER cannot mutate those resources. A signed-in link holder can accept a valid link exactly once. Verify 401 without a session, 404 for nonmember/foreign IDs and 403 for members with insufficient role, plus expired/revoked/reused invitations, manually with synthetic data.
 - **After T07:** Review the complete three-role operation matrix. Check self-removal, last-OWNER protection, cross-household IDs and mixed-household references wherever EPIC-02 routes accept them. Confirm every EPIC-02 acceptance criterion, update `docs/architecture.md` for implemented changes, and record observed commands/results in the task files. Use a local/test database only.
