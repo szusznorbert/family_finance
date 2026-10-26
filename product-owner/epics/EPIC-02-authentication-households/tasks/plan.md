@@ -23,6 +23,8 @@ Deliver a complete authenticated household flow: a person can sign in, create an
 
 T04 and T05 can be developed independently after T03 if they coordinate API contracts. T07 can start after T03 independently of the invitation screens, but its integration verification depends on T06.
 
+**T02 pre-implementation planning pass — 2026-10-26:** T02 remains one bounded household-onboarding vertical slice after T01: persistence and transaction, then authenticated create/list API, then web create/list/select. The [T02 task record](EPIC-02-T02-create-select-households.md) contains likely files, authorization/data-integrity risks, the planned in-place manual scenarios and the EPIC-05 product-history boundary. It was completed before T02 code changes and preserved here afterward. No new blocking product decision was identified.
+
 ## Checkpoints
 
 - **After T01–T03:** Two synthetic accounts can authenticate; one account can create and select two households; a nonmember cannot read or mutate a foreign household through the API, and each role's permitted operations follow the approved matrix. Run focused API checks plus root lint/typecheck/build.
