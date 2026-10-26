@@ -1,87 +1,35 @@
 # Branching, commit and pull request strategy
 
-Use one task branch per product-owner task. The task ID is the link between the epic, task file, branch, commits, and pull request. Epic planning can use a `plan/` branch before task files exist.
+Work locally through an epic and its `EPIC-XX-TYY` tasks. Create one branch, commits, push and pull request only when the epic is complete and its manual checks are recorded. There are no task-level branches or task-level PRs.
 
-## Task IDs
+## Task IDs and planning
 
-Use `EPIC-XX-TYY`, where:
+Keep task IDs and files under `product-owner/epics/<epic-folder>/tasks/`; they link requirements, implementation notes and verification within the epic. Before coding each task, complete the read-only `planning-and-task-breakdown` pass with the `product_owner` agent and record its date, scope, likely files, dependencies, acceptance, verification and open decisions in that task file. Small tasks follow the same gate. Planning does not require the app's Plan mode or extra approval unless a product decision is unresolved.
 
-- `XX` is the two-digit epic number, such as `02` for authentication and households;
-- `YY` is the task sequence within that epic, such as `01`.
+## Epic branch and local work
 
-The corresponding task file lives under `product-owner/epics/<epic-folder>/tasks/` and includes the same ID, for example `EPIC-02-T01-household-membership.md`.
-
-Do not create a task branch or task commit without an existing task ID and task file. Ask the product owner agent to create the task first. For an epic breakdown, use the epic's existing `EPIC-XX` ID and epic file on a `plan/` branch.
-
-## Pre-implementation planning gate
-
-Before the first code edit for every implementation task, run a read-only planning pass with the `planning-and-task-breakdown` skill and the `product_owner` agent. Record the date, scope, likely files, dependencies, acceptance and verification steps, and unresolved decisions in the task file. The developer checks that record before coding; if it is missing or stale, run the planning pass first. This applies to small tasks as well. Planning does not require switching the app's Plan mode or separate user approval unless a product decision is unresolved.
-
-## Branches
-
-Task branch format:
+At epic completion, the `git_workflow` agent prepares one branch from the appropriate current base, preserving all local epic work:
 
 ```text
-<branch-type>/<TASK-ID>-<short-kebab-case-slug>
+feature/EPIC-XX-<epic-slug>
+fix/EPIC-XX-<epic-slug>
 ```
 
-Use `feature/` for new product capabilities and `fix/` for bug fixes. For work that does not fit either category, use `refactor/`, `test/`, `docs/`, or `chore/` as appropriate.
+Use `feature/` for a new epic capability and `fix/` for an epic-wide correction. The slug is short lowercase kebab-case and matches the epic. Do not create `feature/EPIC-XX-TYY-*`, `fix/EPIC-XX-TYY-*` or a separate `plan/` branch for individual tasks. Keep task planning, implementation and manual verification in the local epic workspace until the end-of-epic Git delivery. Do not switch or reset a dirty checkout without preserving its work.
 
-Examples:
+## Commits and pull request
+
+At epic completion, after reviewing the combined diff and recorded checks, create focused Conventional Commits. Include the task ID for a task-specific commit, or the epic ID for a combined change:
 
 ```text
-feature/EPIC-02-T01-household-membership
-fix/EPIC-02-T02-auth-redirect
+feat(auth): [EPIC-02-T07] manage household members
+docs(auth): [EPIC-02] record completed epic decisions
 ```
 
-- The task ID must appear immediately after the branch-type prefix so branches can be searched and grouped by task.
-- Use lowercase kebab-case for the short description. Keep it concise and aligned with the task file.
-- Start from the latest `origin/main` when it is available; otherwise state which local base was used.
-- Keep one task per branch. If work spans independent tasks, split it into separate tasks and branches unless the user explicitly asks to combine them.
-- Never do product work directly on `main`.
-
-Epic planning branch format:
-
-```text
-plan/EPIC-XX-<epic-slug>
-```
-
-Example: `plan/EPIC-01-platform-foundation`. The `EPIC-XX` ID must match an existing epic file. Use this branch to create or revise the epic plan and task files and any directly related planning rules. Keep application implementation on its later task branch.
-
-## Commits
-
-Use Conventional Commit headers with the task ID:
-
-```text
-<type>(<scope>): [<TASK-ID>] <imperative summary>
-```
-
-Examples:
-
-```text
-feat(auth): [EPIC-02-T01] add household membership
-test(auth): [EPIC-02-T01] cover invitation permissions
-docs(auth): [EPIC-02-T01] document membership decisions
-```
-
-Every commit on a task branch must include that task ID. Keep commits focused; do not mix unrelated tasks.
-
-On a `plan/` branch, use the epic ID instead of a task ID, for example:
-
-```text
-docs(plan): [EPIC-01] define platform foundation tasks
-```
-
-## Pull requests
-
-- Use the same task-linked Conventional Commit header as the PR title. For an epic planning PR, use an epic-linked planning commit header as the title.
-- Target `main` unless the user or repository settings specify another base.
-- For a task PR, include the task file path and summarize acceptance criteria, implementation, and verification. For a planning PR, link the epic and new task files and summarize the proposed order, dependencies, and open questions.
-- Do not invent or create a GitHub issue number. The local epic-task ID is the project’s task reference.
+Push the single epic branch and open one PR targeting `main` unless the user specifies another base. The PR links the epic and completed task files, summarizes the accepted scope and manual verification, and lists any checks that remain open. Do not invent GitHub issue numbers.
 
 ## Git safety
 
-- Review `git status`, the staged diff, and `.gitignore` coverage before committing.
-- Never include `.env`, credentials, local database files, generated Prisma output, build output, or unrelated user changes.
-- Do not amend or rewrite published commits, force push, reset user changes, or delete branches without explicit user instruction.
-- Branch creation and commits require the user to ask for Git delivery or to assign that work to `git_workflow`. Pushes and PR creation require a request to publish that task.
+- Git delivery still requires the user's request or explicit assignment to `git_workflow`; do not commit, push or open a PR during an unfinished epic.
+- Before committing, review `git status`, the staged diff and `.gitignore` coverage. Keep `.env`, credentials, local database files, generated Prisma output, build output and unrelated changes out of the commit.
+- Do not amend or rewrite published commits, force push, reset user changes or delete branches without explicit user instruction.

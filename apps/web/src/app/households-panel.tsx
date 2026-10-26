@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import InvitationsManager from "./invitations-manager";
+import MembersManager from "./members-manager";
 
 type HouseholdRole = "OWNER" | "MEMBER" | "VIEWER";
 
@@ -37,6 +39,20 @@ function isHousehold(value: unknown): value is Household {
   );
 }
 
+function isHouseholdSettings(
+  value: unknown,
+): value is Pick<Household, "id" | "name" | "currency" | "role"> {
+  if (!value || typeof value !== "object") return false;
+
+  const household = value as Record<string, unknown>;
+  return (
+    typeof household.id === "string" &&
+    typeof household.name === "string" &&
+    household.currency === "RON" &&
+    ["OWNER", "MEMBER", "VIEWER"].includes(String(household.role))
+  );
+}
+
 function apiMessage(payload: unknown, fallback: string) {
   if (!payload || typeof payload !== "object") return fallback;
   const error = (payload as Record<string, unknown>).error;
@@ -65,6 +81,7 @@ export default function HouseholdsPanel() {
   const [households, setHouseholds] = useState<Household[]>([]);
   const [selectedId, setSelectedId] = useState("");
   const [name, setName] = useState("");
+  const [renameName, setRenameName] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -103,6 +120,7 @@ export default function HouseholdsPanel() {
           ? savedId ?? ""
           : values[0]?.id ?? "";
         setSelectedId(nextId);
+        setRenameName(values.find((household) => household.id === nextId)?.name ?? "");
         if (nextId) saveSelectedHouseholdId(nextId);
       } catch (loadError) {
         if (active) {
@@ -158,6 +176,7 @@ export default function HouseholdsPanel() {
 
       setHouseholds((current) => [value, ...current.filter((item) => item.id !== value.id)]);
       setSelectedId(value.id);
+      setRenameName(value.name);
       saveSelectedHouseholdId(value.id);
       setName("");
       setSuccess(`Elkészült: ${value.name}. Te vagy az első tulajdonos.`);
@@ -175,8 +194,66 @@ export default function HouseholdsPanel() {
   function selectHousehold(id: string) {
     if (!households.some((household) => household.id === id)) return;
     setSelectedId(id);
+    setRenameName(households.find((household) => household.id === id)?.name ?? "");
     saveSelectedHouseholdId(id);
+    setError(null);
     setSuccess(null);
+  }
+
+  async function renameHousehold(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selectedHousehold || selectedHousehold.role !== "OWNER") return;
+
+    const trimmedName = renameName.trim();
+    setError(null);
+    setSuccess(null);
+    if (!trimmedName || Array.from(trimmedName).length > 100) {
+      setError("A név 1 és 100 karakter közötti lehet.");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const response = await fetch(
+        `/api/v1/households/${encodeURIComponent(selectedHousehold.id)}`,
+        {
+          method: "PATCH",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: trimmedName }),
+        },
+      );
+      const payload: unknown = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(apiMessage(payload, "A háztartás nevének mentése nem sikerült."));
+      }
+
+      const value =
+        payload && typeof payload === "object"
+          ? (payload as Record<string, unknown>).household
+          : null;
+      if (!isHouseholdSettings(value) || value.id !== selectedHousehold.id) {
+        throw new Error("A mentett háztartás adatai nem olvashatók.");
+      }
+
+      setHouseholds((current) =>
+        current.map((household) =>
+          household.id === value.id
+            ? { ...household, name: value.name, currency: value.currency, role: value.role }
+            : household,
+        ),
+      );
+      setRenameName(value.name);
+      setSuccess("A háztartás neve elmentve.");
+    } catch (saveError) {
+      setError(
+        saveError instanceof Error
+          ? saveError.message
+          : "A háztartás nevének mentése nem sikerült.",
+      );
+    } finally {
+      setSaving(false);
+    }
   }
 
   const selectedHousehold = households.find((household) => household.id === selectedId);
@@ -269,13 +346,57 @@ export default function HouseholdsPanel() {
           )}
 
           {selectedHousehold && (
-            <div className="mt-4 border-l-2 border-emerald-700 pl-4" aria-live="polite">
-              <p className="text-sm font-semibold text-slate-900">{selectedHousehold.name} induló kategóriái</p>
-              <ul className="mt-2 grid gap-x-4 gap-y-1 text-sm text-slate-700 sm:grid-cols-2">
-                {selectedHousehold.categories.map((category) => (
-                  <li key={category.id}>{category.name}</li>
-                ))}
-              </ul>
+            <div className="mt-4 space-y-5" aria-live="polite">
+              <div className="border-l-2 border-emerald-700 pl-4">
+                <p className="text-sm font-semibold text-slate-900">{selectedHousehold.name} induló kategóriái</p>
+                <ul className="mt-2 grid gap-x-4 gap-y-1 text-sm text-slate-700 sm:grid-cols-2">
+                  {selectedHousehold.categories.map((category) => (
+                    <li key={category.id}>{category.name}</li>
+                  ))}
+                </ul>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-white p-4">
+                <h4 className="font-semibold text-slate-900">Háztartás beállításai</h4>
+                <p className="mt-1 text-sm text-slate-600">
+                  Pénznem: {selectedHousehold.currency} · Szerepkör: {selectedHousehold.role === "OWNER" ? "Tulajdonos" : selectedHousehold.role === "VIEWER" ? "Megtekintő" : "Tag"}
+                </p>
+                {selectedHousehold.role === "OWNER" ? (
+                  <form className="mt-4" onSubmit={renameHousehold}>
+                    <label className="block text-sm font-medium text-slate-800" htmlFor="rename-household">
+                      Háztartás neve
+                    </label>
+                    <input
+                      autoComplete="off"
+                      className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none focus-visible:border-emerald-700 focus-visible:ring-2 focus-visible:ring-emerald-700/20"
+                      id="rename-household"
+                      maxLength={100}
+                      name="name"
+                      onChange={(event) => setRenameName(event.currentTarget.value)}
+                      required
+                      value={renameName}
+                    />
+                    <button
+                      className="mt-3 rounded-lg bg-emerald-800 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-800 disabled:cursor-wait disabled:opacity-60"
+                      disabled={saving}
+                      type="submit"
+                    >
+                      {saving ? "Mentés…" : "Név mentése"}
+                    </button>
+                  </form>
+                ) : (
+                  <p className="mt-3 text-sm text-slate-600">A háztartás nevét csak a tulajdonos módosíthatja.</p>
+                )}
+              </div>
+              <InvitationsManager
+                householdId={selectedHousehold.id}
+                key={`invitations:${selectedHousehold.id}:${selectedHousehold.role}`}
+                role={selectedHousehold.role}
+              />
+              <MembersManager
+                householdId={selectedHousehold.id}
+                key={`members:${selectedHousehold.id}:${selectedHousehold.role}`}
+                role={selectedHousehold.role}
+              />
             </div>
           )}
         </div>
