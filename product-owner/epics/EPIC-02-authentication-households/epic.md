@@ -20,7 +20,7 @@ Let users securely create and share household spaces with the right access for e
 
 ## Implementation plan
 
-The [EPIC-02 task plan](tasks/plan.md) breaks this epic into seven ordered tasks. The first version allows open registration and uses an expiring, single-use invitation link that a household OWNER copies and forwards. The link holder can accept the invitation after signing in; the link itself is the invitation credential.
+The [EPIC-02 task plan](tasks/plan.md) breaks this epic into eight tasks. The [credential-form security fix](tasks/EPIC-02-T08-protect-native-auth-form-submission.md) must precede wider authentication testing or external exposure. The first version allows open registration and uses an expiring, single-use invitation link that a household OWNER copies and forwards. The link holder can accept the invitation after signing in; the link itself is the invitation credential.
 
 ## Role decision — 2026-10-26
 
