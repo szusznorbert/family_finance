@@ -1,7 +1,7 @@
 # Jelenlegi architektúra
 
-Utolsó ellenőrzés: 2026-10-25
-Állapot: konfigurációs alap; a háztartási pénzügyi funkciók még nincsenek megvalósítva.
+Utolsó ellenőrzés: 2026-10-26
+Állapot: a fiók/munkamenet és a háztartás létrehozás, listázás és kiválasztás megvalósult; a főkönyv és a későbbi pénzügyi funkciók még hiányoznak.
 
 Ez a dokumentum a repository jelenlegi állapotát írja le. A tervezett, de még nem elkészült részek külön jelölést kapnak, hogy későbbi módosításkor látható legyen, mi a tényleges architektúra.
 
@@ -48,6 +48,8 @@ flowchart LR
 - A web Next.js rewrite-ja az `/api/backend/*`, `/api/auth/*` és `/api/v1/*` kéréseket az API-ra továbbítja. Fejlesztéskor az alapcél `http://localhost:3001`; Compose alatt az `API_INTERNAL_URL=http://api:3001` érvényesül.
 - A same-origin proxy elkerüli a böngésző CORS-korlátozását, és a Better Auth munkamenet-sütije a web originjén működik. Az API állapotvégpontja a `/` útvonalon, a Better Auth végpontjai a `/api/auth/*` alatt találhatók.
 - A web a Better Auth 1.7.12 React kliensével regisztrál, jelentkeztet be és ki, valamint ellenőrzi a munkamenetet. Az API `GET /api/v1/me` végpontja a szerveroldali munkamenetből adja vissza a felhasználó alapadatait, vagy 401-et ad hitelesítés nélkül. A böngésző által küldött `userId` nem szolgál azonosításként.
+- Az API `GET` és `POST /api/v1/households` végpontjai a Better Auth szerveroldali munkamenetéből veszik a felhasználóazonosítót. A listavégpont csak a felhasználó tagságait adja vissza. A létrehozás egy Prisma-tranzakcióban menti a háztartást, az első `OWNER` tagságot és a kilenc alapértelmezett kategóriát; a pénznem `RON`, más pénznemű kérés elutasításra kerül.
+- A web bejelentkezés után a tagságlistából kínál háztartás-kiválasztást. A kiválasztott háztartás azonosítója `household-selection:v1` kulccsal, minimális böngészőoldali preferenciaként tárolódik; ez nem jogosultsági adat, a szerveroldali API mindig a munkamenet és tagság alapján ellenőriz.
 - A Better Auth nyilvános base URL-je és engedélyezett originje a `WEB_ORIGIN` értékéből származik (`http://localhost:3000` alapértelmezés), mert a böngésző az auth végpontot a web proxyn keresztül éri el. Az API belső címe ettől független.
 - A böngésző nem kapcsolódik közvetlenül a PostgreSQL-hez. Az adatbázis-hozzáférés az API feladata.
 - Nincs beállítva reverse proxy. A Compose-portok jelenleg csak a localhost interfészre vannak kötve.
@@ -86,10 +88,10 @@ flowchart LR
 
 - A Compose `postgres` szolgáltatása a `postgres_data` nevű kötetet használja.
 - A `DATABASE_URL` és a Better Auth beállításai a repository gyökerében lévő `.env` fájlból származnak. A `.env.example` csak minta; a titkos kulcsot helyben kell generálni.
-- A Prisma konfiguráció az `apps/api/prisma.config.ts` fájlban van. A séma az `apps/api/prisma/schema.prisma` fájlban, az első migráció az `apps/api/prisma/migrations/` könyvtárban található.
+- A Prisma konfiguráció az `apps/api/prisma.config.ts` fájlban van. A séma az `apps/api/prisma/schema.prisma` fájlban, a migrációk az `apps/api/prisma/migrations/` könyvtárban találhatók.
 - A Prisma Client generált fájljai az `apps/api/src/generated/prisma/` könyvtárba kerülnek; ez a könyvtár Git-ignore alatt van.
-- A séma jelenleg csak a Better Auth `User`, `Session`, `Account` és `Verification` modelljeit tartalmazza.
-- Az első `init` adatbázis-migráció létrejött, és a helyi PostgreSQL-adatbázisra alkalmazva lett.
+- A séma a Better Auth `User`, `Session`, `Account` és `Verification` modelljei mellett tartalmazza a `Household`, `HouseholdMember` és `ExpenseCategory` modelleket, valamint a négy szerepet felsoroló `HouseholdRole` enumot. A háztartások pénzneme alapértelmezetten `RON`; az API ezen kívül nem fogad el más pénznemet.
+- Az `init` és `20261026074859_add_households` migráció létrejött; mindkettő alkalmazva lett a helyi PostgreSQL-adatbázisra.
 - Fájlok privát tárolása, feltöltési kötet és mentési folyamat még nincs beállítva.
 
 ## Fejlesztői és konténeres indítás
@@ -102,7 +104,7 @@ flowchart LR
 - `docker compose up -d postgres` — csak az adatbázis indítása.
 - `docker compose up --build -d` — web, API és adatbázis konténeres indítása.
 - `pnpm --filter api prisma:generate` — Prisma Client generálása.
-- `pnpm --filter api exec prisma migrate dev --name init` — kezdeti migráció létrehozása és alkalmazása.
+- `pnpm --filter api exec prisma migrate dev --name <migration-name>` — fejlesztői migráció létrehozása és alkalmazása.
 
 A gyökér `Dockerfile` az `APP=web` vagy `APP=api` build argumentummal készít külön alkalmazásimage-et. A Dockerfile a teljes workspace-függőségeket és forrásokat használja; a helyi Next.js-kimenet, TypeScript-cache és generált Prisma-kód kimarad a build kontextusából. A Prisma Client az API image-ben generálódik.
 
@@ -112,12 +114,13 @@ Az API konténer indításkor `prisma migrate deploy` parancsot futtat, és csak
 
 ## Jelenleg még hiányzó funkciók
 
-- Háztartások, tagságok, szerepkörök, kategóriák és pénzügyi adatmodellek.
+- Kategóriák szerkesztése/archiválása és a szerepkörök teljes engedélyezési mátrixa.
+- Pénzügyi főkönyv és tranzakció-adatmodellek.
 - További verziózott `/api/v1` üzleti végpontok, validáció és egységes hibaválaszok a `me` végponton túl.
 - Receipt, bill, vehicle és document adatmodellek és üzleti folyamatok.
 - E-mailes meghívás és emlékeztető-küldés.
 - Privát dokumentumtár, reverse proxy, éles telepítési és visszaállítási folyamat.
-- Automatizált tesztcsomag. Az EPIC-02-T01 jelenleg szintetikus adatokkal végzett kézi API- és böngészős ellenőrzéssel rendelkezik.
+- Automatizált tesztcsomag. Az EPIC-02-T01 és EPIC-02-T02 jelenleg szintetikus adatokkal végzett kézi böngészős/API-ellenőrzésre épül.
 
 ## Frissítési szabály
 

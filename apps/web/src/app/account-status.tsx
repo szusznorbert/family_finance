@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { authClient } from "@/lib/auth-client";
 
-export default function AccountStatus() {
+export default function AccountStatus({ children }: { children?: ReactNode }) {
   const { data, isPending, error, refetch } = authClient.useSession();
   const [signingOut, setSigningOut] = useState(false);
   const [signOutError, setSignOutError] = useState(false);
@@ -33,15 +33,18 @@ export default function AccountStatus() {
       ) : error ? (
         <p className="mt-2 text-sm text-rose-700" role="alert">A munkamenet most nem ellenőrizhető.</p>
       ) : data?.user ? (
-        <div className="mt-2">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <p className="text-sm text-slate-700">Bejelentkezve: <strong>{data.user.name}</strong> ({data.user.email})</p>
-            <button className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium hover:bg-slate-50 disabled:opacity-60" disabled={signingOut} onClick={() => void signOut()} type="button">
-              {signingOut ? "Kijelentkezés…" : "Kijelentkezés"}
-            </button>
+        <>
+          <div className="mt-2">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <p className="text-sm text-slate-700">Bejelentkezve: <strong>{data.user.name}</strong> ({data.user.email})</p>
+              <button className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 disabled:opacity-60" disabled={signingOut} onClick={() => void signOut()} type="button">
+                {signingOut ? "Kijelentkezés…" : "Kijelentkezés"}
+              </button>
+            </div>
+            {signOutError && <p className="mt-2 text-sm text-rose-700" role="alert">A kijelentkezés nem sikerült. Próbáld újra.</p>}
           </div>
-          {signOutError && <p className="mt-2 text-sm text-rose-700" role="alert">A kijelentkezés nem sikerült. Próbáld újra.</p>}
-        </div>
+          {children}
+        </>
       ) : (
         <div className="mt-3 flex flex-wrap gap-3">
           <Link className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800" href="/bejelentkezes">Bejelentkezés</Link>

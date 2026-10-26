@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -9,18 +8,67 @@ datasource db {
 }
 
 model User {
-  id            String    @id
-  name          String
-  email         String
-  emailVerified Boolean   @default(false)
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  sessions      Session[]
-  accounts      Account[]
+  id                   String            @id
+  name                 String
+  email                String
+  emailVerified        Boolean           @default(false)
+  image                String?
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  sessions             Session[]
+  accounts             Account[]
+  householdMemberships HouseholdMember[]
 
   @@unique([email])
   @@map("user")
+}
+
+enum HouseholdRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+
+  @@map("household_role")
+}
+
+model Household {
+  id         String            @id @default(cuid())
+  name       String            @db.VarChar(100)
+  currency   String            @default("RON") @db.VarChar(3)
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+  members    HouseholdMember[]
+  categories ExpenseCategory[]
+
+  @@index([createdAt])
+  @@map("household")
+}
+
+model HouseholdMember {
+  householdId String
+  userId      String
+  role        HouseholdRole @default(MEMBER)
+  createdAt   DateTime      @default(now())
+  household   Household     @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([householdId, userId])
+  @@index([userId, createdAt])
+  @@map("household_member")
+}
+
+model ExpenseCategory {
+  id          String    @id @default(cuid())
+  householdId String
+  name        String    @db.VarChar(100)
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  household   Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+
+  @@unique([householdId, name])
+  @@index([householdId, sortOrder])
+  @@map("expense_category")
 }
 
 model Session {
