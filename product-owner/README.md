@@ -22,6 +22,10 @@ The [EPIC-01 task plan](epics/EPIC-01-platform-foundation/tasks/plan.md) records
 
 The [EPIC-02 task plan](epics/EPIC-02-authentication-households/tasks/plan.md) records the authentication and household breakdown, task order, and decisions required before implementation.
 
+The [EPIC-03 task plan](epics/EPIC-03-ledger-dashboard/tasks/plan.md) defines the RON-only canonical ledger foundation needed before receipt approval.
+
+The [EPIC-05 task plan](epics/EPIC-05-receipts/tasks/plan.md) requires item review, product matching and a visible price trend in the first receipt feature release.
+
 Use task IDs in the form `EPIC-XX-TYY`, where `XX` is the two-digit epic number and `YY` is the two-digit task sequence within that epic (for example, `EPIC-02-T01`). Keep the task ID in its filename, branch name, commit message, and pull request title according to [the branching strategy](../docs/branching-strategy.md).
 
 An epic breakdown can be proposed on a `plan/EPIC-XX-<epic-slug>` branch using the existing epic ID before its task files are created.
