@@ -4,12 +4,13 @@
 
 Deliver a complete authenticated household flow: a person can sign in, create and choose a household, invite another person, and use only the households and operations their membership permits. The API remains the authority for identity, membership and role checks. The seven tasks below are planning proposals; no application behavior is implemented by this plan.
 
-## Current evidence
+## Current evidence — 2026-10-26
 
 - T01 provides Better Auth email/password, web registration/sign-in and session access; the web proxies `/api/auth/*` and `/api/v1/*` to the separate API.
-- T02's household, membership and category implementation is open in PR #10. Its original, already-applied migration introduced an extra ADMIN enum value; a follow-on correction is prepared in the active branch and must meet the [T02 merge gate](EPIC-02-T02-create-select-households.md) before merging.
-- There is no ID-scoped household route or reusable household policy helper yet.
-- The accepted role set is OWNER, MEMBER and VIEWER. The attached technical specification's four-role baseline is superseded by this product decision.
+- T02 PR #10 and its corrective PR #11 are merged. The Prisma `HouseholdRole` enum now contains OWNER, MEMBER and VIEWER; the earlier ADMIN value was removed through a follow-on migration that preserved existing household data.
+- `GET /api/v1/households` reads the authenticated user's memberships and returns only those households. `POST /api/v1/households` requires a session and atomically creates a RON household, the creator's OWNER membership and nine default categories. `GET /api/v1/me` is account-level.
+- There is no ID-scoped household business route or reusable household policy helper yet. The browser's selected household ID is a local preference, not authorization.
+- The accepted three-role model supersedes the attached technical specification's four-role suggestion.
 
 ## Task order and dependencies
 
@@ -25,7 +26,7 @@ T04 and T05 can be developed independently after T03 if they coordinate API cont
 
 **T02 pre-implementation planning pass — 2026-10-26:** Keep T02 as one bounded household-onboarding vertical slice. It depends on the T01 session and `/api/v1/*` proxy flow; implement persistence/transaction first, then authenticated create/list API, then the web create/list/select UI. The [T02 task record](EPIC-02-T02-create-select-households.md) names likely files, authorization and rollback risks, and exact manual checks in the already running local app with synthetic data. There is no new blocking product decision. Product-level receipt items and price history remain in EPIC-05; cheapest-store optimization is outside the MVP.
 
-**Role decision and PR #10 gate — 2026-10-26:** OWNER, MEMBER and VIEWER are the only accepted roles. The T02 creator remains OWNER. Include and review the data-preserving follow-on migration that removes the unused ADMIN enum, align the Prisma Client and web role contract, and manually recheck existing/new households before merge. ADMIN-to-OWNER conversion is compatibility handling for any legacy/manual ADMIN rows; the observed T02-created memberships were already OWNER. The [T02 task file](EPIC-02-T02-create-select-households.md) records the checks. T03 follows that correction.
+**Role decision and T02 completion — 2026-10-26:** OWNER, MEMBER and VIEWER are the only accepted roles. The T02 creator remains OWNER. PR #10 and corrective PR #11 are merged; the latter removed the unused ADMIN enum through a data-preserving migration. ADMIN-to-OWNER conversion was compatibility handling for possible legacy/manual rows; observed T02-created memberships were already OWNER. The [T02 task file](EPIC-02-T02-create-select-households.md) records the manual checks. T03 now builds on this implemented base.
 
 ## Checkpoints
 
