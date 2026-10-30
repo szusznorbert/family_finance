@@ -1,0 +1,11 @@
+id: epic-stabilization
+version: 2
+steps:
+  - id: verification
+    agent: main
+    depends_on: []
+    evidence: command_gates
+    commands:
+      - [pnpm, lint]
+      - [pnpm, typecheck]
+      - [pnpm, build]

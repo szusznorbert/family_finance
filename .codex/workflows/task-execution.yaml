@@ -1,0 +1,11 @@
+id: task-execution
+version: 2
+steps:
+  - id: implementation
+    agent: main
+    depends_on: []
+    evidence: report
+  - id: verification
+    agent: main
+    depends_on: [implementation]
+    evidence: quick_verification

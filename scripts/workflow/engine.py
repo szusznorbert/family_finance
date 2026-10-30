@@ -53,8 +53,9 @@ def definition(name):
         if not isinstance(entry.get("depends_on"),list) or any(d not in ids for d in entry["depends_on"]):
             raise WorkflowError("Dependencies must refer to earlier steps")
         ids.append(entry["id"])
-    if ids[0]!="planning" or not {"implementation","verification","review"}.issubset(ids):
-        raise WorkflowError("Mandatory steps missing")
+    if name=="epic-planning" and ids!=["planning"]: raise WorkflowError("Invalid epic planning steps")
+    if name=="task-execution" and ids!=["implementation","verification"]: raise WorkflowError("Invalid task execution steps")
+    if name=="epic-stabilization" and ids!=["verification"]: raise WorkflowError("Invalid stabilization steps")
     return data
 
 def current():
@@ -65,21 +66,39 @@ def current():
 def save(run):
     write(RUNS/run["run_id"]/"state.json",run)
 
-def start(workflow,mode,task,session=None):
+def epic_dir(epic_id):
+    dirs=[p for p in (ROOT/"product-owner"/"epics").glob(epic_id+"-*") if p.is_dir() and (p/"epic.md").is_file()]
+    if len(dirs)!=1: raise WorkflowError("Epic does not exist or is ambiguous")
+    return dirs[0]
+
+def start(workflow,mode,task,session=None,check="typecheck"):
     if mode not in ("auto","plan-only"): raise WorkflowError("Invalid mode")
-    if not re.fullmatch(r"EPIC-[0-9]{2}-T[0-9]{2}",task):
-        raise WorkflowError("Use EPIC-XX-TYY task identifier")
+    if check not in ("none","typecheck"): raise WorkflowError("Invalid quick check profile")
     d=definition(workflow)
+    is_task=workflow=="task-execution"
+    if not re.fullmatch(r"EPIC-[0-9]{2}-T[0-9]{2}" if is_task else r"EPIC-[0-9]{2}",task):
+        raise WorkflowError("Use an EPIC-XX or EPIC-XX-TYY ID")
+    epic=epic_dir(task[:7])
+    task_artifact=None
+    if is_task:
+        plan=epic/"tasks"/"plan.md"
+        if not plan.is_file() or not plan.read_text().strip():
+            raise WorkflowError("Epic plan missing. Plan the epic once before task execution.")
+        tasks=list((epic/"tasks").glob(task+"-*.md"))
+        if len(tasks)!=1 or not tasks[0].read_text().strip():
+            raise WorkflowError("Expected exactly one nonempty task file")
+        task_artifact=str(tasks[0].relative_to(ROOT))
+    elif workflow=="epic-stabilization" and not (epic/"tasks"/"plan.md").is_file():
+        raise WorkflowError("Epic plan missing")
     with lock():
-        existing=current()
-        if existing and existing["status"] not in ("completed","cancelled"):
-            raise WorkflowError("Workflow already active: "+existing["run_id"])
-        run={"run_id":"run-"+uuid.uuid4().hex[:12],"workflow":workflow,"version":d["version"],
-             "task":task,"mode":mode,"session_id":session,"status":"running",
-             "approved":False,"created_at":stamp(),
-             "steps":{s["id"]:{"status":"pending","started_at":None,"ended_at":None,"evidence":[]} for s in d["steps"]}}
-        save(run)
-        write(ACTIVE,{"run_id":run["run_id"]})
+        if current() is not None: raise WorkflowError("Another workflow is active")
+        run={"run_id":"run-"+uuid.uuid4().hex[:12],"workflow":workflow,
+             "version":d["version"],"task":task,"mode":mode,
+             "session_id":session,"status":"awaiting_approval" if is_task and mode=="plan-only" else "running",
+             "approved":False,"created_at":stamp(),"check_profile":check,
+             "task_artifact":task_artifact,"iterations":[],
+             "steps":{e["id"]:{"status":"pending","started_at":None,"ended_at":None,"evidence":[]} for e in d["steps"]}}
+        save(run);write(ACTIVE,{"run_id":run["run_id"]})
         return run
 
 def step_spec(run,step):
@@ -130,79 +149,103 @@ def verify(commands):
 def complete(step,evidence=None,verdict=None):
     with lock():
         run=current()
-        if not run: raise WorkflowError("No workflow")
+        if not run: raise WorkflowError("No active workflow")
         spec=step_spec(run,step)
         if not spec or run["steps"][step]["status"]!="running":
             raise WorkflowError("Step is not running")
         kind=spec.get("evidence")
-        proof=[]
-        if kind in ("planning_artifact","report","passing_review"):
+        if kind=="planning_artifact":
             artifact=evidence_file(evidence)
-            if kind=="planning_artifact" and not (artifact.startswith("product-owner/epics/") and run["task"] in artifact):
-                raise WorkflowError("Planning artifact must be the matching EPIC task file")
-            if kind=="passing_review" and verdict not in ("pass","fail"):
-                raise WorkflowError("Review verdict required")
-            proof=[{"artifact":artifact,"verdict":verdict,"kind":"agent_reported"}]
+            epic=epic_dir(run["task"])
+            if artifact!=str((epic/"tasks"/"plan.md").relative_to(ROOT)):
+                raise WorkflowError("Planning evidence must be the epic tasks/plan.md")
+            if not list((epic/"tasks").glob(run["task"]+"-T[0-9][0-9]-*.md")):
+                raise WorkflowError("Epic breakdown must contain tasks")
+            proof=[{"artifact":artifact,"kind":"epic_plan"}]
+        elif kind=="report":
+            proof=[{"artifact":evidence_file(evidence),"kind":"agent_reported"}]
+        elif kind=="quick_verification":
+            if run.get("check_profile")=="none":
+                if verdict not in ("pass","fail") or not evidence:
+                    raise WorkflowError("Skipped automated check requires explicit manual result and evidence")
+                proof=[{"kind":"manual","artifact":evidence_file(evidence),
+                        "passed":verdict=="pass","automated_checks":"not_run"}]
+            else:
+                proof=verify([["pnpm","typecheck"]])
+                if verdict=="fail":proof.append({"kind":"manual","passed":False})
         elif kind=="command_gates":
             proof=verify(spec["commands"])
-        else:
-            raise WorkflowError("Unknown verification gate")
-        success=bool(proof) and (kind!="command_gates" or all(p.get("passed") for p in proof))
-        if kind=="passing_review" and verdict!="pass": success=False
-        run["steps"][step].update(status="completed" if success else "failed",
-                                  ended_at=stamp(),evidence=proof)
-        if success and step=="planning" and run["mode"]=="plan-only":
+        else:raise WorkflowError("Unknown evidence type")
+        success=bool(proof) and all(p.get("passed",True) for p in proof)
+        run["steps"][step].update(status="completed" if success else "failed",ended_at=stamp(),evidence=proof)
+        if success and kind=="planning_artifact" and run["mode"]=="plan-only":
             run["status"]="awaiting_approval"
-        if success and all(v["status"]=="completed" for v in run["steps"].values()):
+        elif success and all(v["status"]=="completed" for v in run["steps"].values()):
             run["status"]="completed"
         save(run)
         if run["status"]=="completed": ACTIVE.unlink(missing_ok=True)
-        if not success: raise WorkflowError("Gate failed: review recorded evidence; repair and re-verify")
+        if not success:raise WorkflowError("Verification failed; repair and retry")
         return run
 
 def approve(run_id):
-    """Only the UserPromptSubmit hook should call this after validating a user message."""
     with lock():
         run=current()
         if not run or run["run_id"]!=run_id or run["mode"]!="plan-only" or run["status"]!="awaiting_approval":
-            raise WorkflowError("No matching plan awaiting approval")
-        run.update(approved=True,approved_at=stamp(),status="running")
+            raise WorkflowError("No matching user approval pending")
+        run.update(approved=True,approved_at=stamp())
+        run["status"]="completed" if all(x["status"]=="completed" for x in run["steps"].values()) else "running"
         save(run)
+        if run["status"]=="completed":ACTIVE.unlink(missing_ok=True)
         return run
 
-def reopen(reason):
-    if len(reason.strip())<8: raise WorkflowError("Provide a meaningful repair reason")
+def iterate(reason,task):
+    """Reuse the existing task and epic plan; rerun implementation and quick verification."""
+    if len(reason.strip())<3:raise WorkflowError("Missing iteration reason")
     with lock():
         run=current()
-        if not run or run["status"]!="running" or not any(run["steps"][s]["status"]=="failed" for s in ("verification","review")):
-            raise WorkflowError("Requires failed verification or review")
-        reset=False
-        for s in definition(run["workflow"])["steps"]:
-            if s["id"]=="implementation": reset=True
-            if reset:
-                run["steps"][s["id"]]={"status":"pending","started_at":None,"ended_at":None,"evidence":[]}
-        run.setdefault("rework",[]).append({"timestamp":stamp(),"reason":reason})
-        save(run)
-        return run
+        if not run:
+            candidates=[]
+            for path in RUNS.glob("*/state.json"):
+                try:
+                    record=json.loads(path.read_text())
+                    if record.get("task")==task and record.get("workflow")=="task-execution" and record.get("status")=="completed":
+                        candidates.append(record)
+                except (ValueError,OSError):pass
+            if not candidates:raise WorkflowError("Completed task run not found")
+            run=max(candidates,key=lambda r:r["created_at"])
+            write(ACTIVE,{"run_id":run["run_id"]})
+        if run["workflow"]!="task-execution" or run["task"]!=task or run["status"] not in ("running","completed"):
+            raise WorkflowError("Only the same task can be iterated")
+        running=[k for k,v in run["steps"].items() if v["status"]=="running"]
+        if running and running!=["implementation"]:raise WorkflowError("Cannot interrupt a running verification")
+        if not running:
+            for step in ("implementation","verification"):
+                run["steps"][step]={"status":"pending","started_at":None,"ended_at":None,"evidence":[]}
+        run["status"]="running"
+        run.setdefault("iterations",[]).append({"timestamp":stamp(),"reason":reason})
+        save(run);return run
 
 def main():
     p=argparse.ArgumentParser()
     sub=p.add_subparsers(dest="action",required=True)
     a=sub.add_parser("start")
-    for k in ("workflow","mode","task"): a.add_argument("--"+k,required=True)
+    a.add_argument("--workflow",choices=("epic-planning","task-execution","epic-stabilization"),required=True)
+    a.add_argument("--mode",choices=("auto","plan-only"),default="auto")
+    a.add_argument("--task",required=True)
+    a.add_argument("--check",choices=("none","typecheck"),default="typecheck")
     a.add_argument("--session")
-    for operation in ("begin","complete"):
-        a=sub.add_parser(operation);a.add_argument("--step",required=True)
-        if operation=="complete":
+    for op in ("begin","complete"):
+        a=sub.add_parser(op);a.add_argument("--step",required=True)
+        if op=="complete":
             a.add_argument("--evidence");a.add_argument("--verdict",choices=("pass","fail"))
-    a=sub.add_parser("reopen-implementation");a.add_argument("--reason",required=True)
+    a=sub.add_parser("iterate");a.add_argument("--task",required=True);a.add_argument("--reason",required=True)
     sub.add_parser("status")
     args=p.parse_args()
     try:
-        result=(start(args.workflow,args.mode,args.task,args.session) if args.action=="start" else
+        result=(start(args.workflow,args.mode,args.task,args.session,args.check) if args.action=="start" else
                 begin(args.step) if args.action=="begin" else
                 complete(args.step,args.evidence,args.verdict) if args.action=="complete" else
-                reopen(args.reason) if args.action=="reopen-implementation" else current())
+                iterate(args.reason,args.task) if args.action=="iterate" else current())
         print(json.dumps(result,ensure_ascii=False,indent=2));return 0
     except WorkflowError as e:
         print("WORKFLOW ERROR: "+str(e),file=sys.stderr);return 2
