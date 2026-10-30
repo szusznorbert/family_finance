@@ -146,7 +146,7 @@ def verify(commands):
         if not item["passed"]: break
     return outcomes
 
-def complete(step,evidence=None,verdict=None):
+def complete(step,evidence=None,verdict=None,summary=None):
     with lock():
         run=current()
         if not run: raise WorkflowError("No active workflow")
@@ -163,13 +163,24 @@ def complete(step,evidence=None,verdict=None):
                 raise WorkflowError("Epic breakdown must contain tasks")
             proof=[{"artifact":artifact,"kind":"epic_plan"}]
         elif kind=="report":
-            proof=[{"artifact":evidence_file(evidence),"kind":"agent_reported"}]
+            if summary is not None:
+                note=summary.strip()
+                if not 10<=len(note)<=500: raise WorkflowError("Implementation summary must be 10-500 characters")
+                proof=[{"kind":"agent_reported","summary":note}]
+            else:
+                proof=[{"artifact":evidence_file(evidence),"kind":"agent_reported"}]
         elif kind=="quick_verification":
             if run.get("check_profile")=="none":
-                if verdict not in ("pass","fail") or not evidence:
-                    raise WorkflowError("Skipped automated check requires explicit manual result and evidence")
-                proof=[{"kind":"manual","artifact":evidence_file(evidence),
-                        "passed":verdict=="pass","automated_checks":"not_run"}]
+                if verdict not in ("pass","fail"):
+                    raise WorkflowError("No-check verification requires an explicit verdict")
+                if summary is not None and 10<=len(summary.strip())<=500:
+                    proof=[{"kind":"manual","summary":summary.strip(),
+                            "passed":verdict=="pass","automated_checks":"not_run"}]
+                elif evidence:
+                    proof=[{"kind":"manual","artifact":evidence_file(evidence),
+                            "passed":verdict=="pass","automated_checks":"not_run"}]
+                else:
+                    raise WorkflowError("Manual verification requires a factual summary or evidence")
             else:
                 proof=verify([["pnpm","typecheck"]])
                 if verdict=="fail":proof.append({"kind":"manual","passed":False})
@@ -237,14 +248,14 @@ def main():
     for op in ("begin","complete"):
         a=sub.add_parser(op);a.add_argument("--step",required=True)
         if op=="complete":
-            a.add_argument("--evidence");a.add_argument("--verdict",choices=("pass","fail"))
+            a.add_argument("--evidence");a.add_argument("--summary");a.add_argument("--verdict",choices=("pass","fail"))
     a=sub.add_parser("iterate");a.add_argument("--task",required=True);a.add_argument("--reason",required=True)
     sub.add_parser("status")
     args=p.parse_args()
     try:
         result=(start(args.workflow,args.mode,args.task,args.session,args.check) if args.action=="start" else
                 begin(args.step) if args.action=="begin" else
-                complete(args.step,args.evidence,args.verdict) if args.action=="complete" else
+                complete(args.step,args.evidence,args.verdict,args.summary) if args.action=="complete" else
                 iterate(args.reason,args.task) if args.action=="iterate" else current())
         print(json.dumps(result,ensure_ascii=False,indent=2));return 0
     except WorkflowError as e:
