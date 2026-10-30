@@ -1,12 +1,18 @@
 # EPIC-05-T03: Review and correct receipt lines
 
-## Goal and value
+## Goal and user value
 
 A household member can correct every extracted or manually entered line before the receipt becomes a financial transaction.
 
 ## Scope
 
 Provide editable receipt header and item-line review, including add/remove/correct actions and visible warnings about line totals versus the receipt total. Persist corrections as draft data; do not post to the ledger.
+
+## Implementation checklist
+
+- [ ] Provide household-authorized draft editing for receipt header fields and add/remove/correct actions on item descriptions, quantities, units, unit prices, and line totals.
+- [ ] Persist reviewed draft changes across reloads and recalculate/validate RON totals with decimal precision.
+- [ ] Surface unresolved total mismatches, discounts, and unreadable values before approval; enforce household isolation and the approved mutation role matrix.
 
 ## Acceptance criteria
 
@@ -18,7 +24,7 @@ Provide editable receipt header and item-line review, including add/remove/corre
 
 EPIC-05-T02's itemized draft and manual entry path. Agree on discounts/tax and total-reconciliation behavior before approval work.
 
-## Verification
+## Verification checklist
 
 - [ ] In the existing local app, manually correct a synthetic multi-line receipt, reload, check warnings and attempt unauthorized cross-household edits. No copies or automated tests.
 

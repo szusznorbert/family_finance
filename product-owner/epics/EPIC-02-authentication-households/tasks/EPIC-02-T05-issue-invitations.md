@@ -37,15 +37,47 @@ Create invitations that expire after seven days for a household, an informationa
 - **Manual acceptance and verification:** Review the parser and invitation route against safe synthetic configurations: local HTTP loopback and non-loopback HTTPS succeed; non-loopback HTTP, userinfo, path, query, fragment, unsupported scheme, malformed and missing values fail before persistence. For failed cases verify the pending invitation count does not change and the response contains no raw token. Confirm normal local UI issue/copy still works with the configured loopback origin and that the resulting link has a fragment rather than a query. Run targeted lint and API typecheck, inspect the final diff and document observed outcomes; do not add or run automated tests for this MVP security follow-up.
 - **Dependencies, risks and decisions:** T05's invitation issue flow and the shared CSRF guard already exist. URL normalization can hide unsafe components if only the serialized origin is checked; validate the supplied configuration itself. The developer may share the validator with CSRF handling if that reduces divergence. No product decision is open.
 
+## Implementation checklist
+
+- [x] Invitation model, token verifier/hash persistence and uniqueness/expiry constraints are implemented in `apps/api/prisma/schema.prisma` and its migration.
+- [x] Household-scoped OWNER-only list/create/replace/revoke API is implemented in `apps/api/src/app/api/v1/households/[householdId]/invitations/`.
+- [x] `apps/web/src/app/invitations-manager.tsx` creates the one-time link, supports copy/revoke and presents the informational e-mail flow.
+
 ## Acceptance criteria
 
-- [ ] Only OWNER can issue, list, revoke and explicitly replace invitations; MEMBER and VIEWER receive 403 for these operations, and a nonmember receives 404 for a foreign household ID. Invitations grant only MEMBER or VIEWER, never OWNER.
-- [ ] The invite expires seven days after issue and stores only a token hash/verifier; the OWNER-entered e-mail is clearly presented as informational, not as identity verification or a restriction on who may redeem the link.
-- [ ] There is at most one pending invitation per household and normalized informational e-mail address. Reissuing requires an explicit OWNER replacement action that revokes the old link; the new link is shown only once. Concurrent issue/replace requests preserve this limit.
-- [ ] The OWNER can copy the newly created link once and privately forward it, and can revoke an outstanding link; a nonmember cannot issue, list or revoke invitations for a foreign household ID. Pending invitation address labels are visible only to an OWNER.
-- [ ] The UI warns that any signed-in link holder can join, including someone other than the entered e-mail address; no invitation e-mail is sent by the app.
+- [x] Only an OWNER can issue invitations.
+- [x] Only an OWNER can list pending invitations.
+- [x] Only an OWNER can revoke invitations.
+- [x] Only an OWNER can explicitly replace invitations.
+- [ ] MEMBER and VIEWER receive 403 for invitation-management operations.
+- [x] A nonmember receives 404 for a foreign household ID.
+- [x] Invitations grant only MEMBER or VIEWER, never OWNER.
+- [x] An invitation expires seven days after issue.
+- [x] Only a token hash/verifier is stored; the raw token is not stored.
+- [ ] The OWNER-entered e-mail is presented as informational, not identity verification.
+- [x] The informational e-mail does not restrict who may redeem the link.
+- [x] There is at most one pending invitation per household and normalized informational e-mail address.
+- [x] Reissuing requires an explicit OWNER replacement action.
+- [ ] Replacement revokes/invalidates the old link.
+- [ ] A newly issued or replacement link is shown only once.
+- [ ] Concurrent issue/replace requests preserve the one-pending-invitation limit.
+- [ ] The OWNER can copy the newly created link once and privately forward it.
+- [x] The OWNER can revoke an outstanding link.
+- [ ] A nonmember cannot issue, list, or revoke invitations for a foreign household ID.
+- [ ] Pending invitation address labels are visible only to an OWNER.
+- [ ] The UI warns that any signed-in link holder can join, including someone other than the entered e-mail address.
+- [ ] The app does not send invitation e-mail.
 
-## Verification
+### Acceptance criteria decomposition note — 2026-10-28
+
+The five former combined criteria were decomposed as follows: old criterion 1 → criteria 1–7; old criterion 2 → criteria 8–11; old criterion 3 → criteria 12–16; old criterion 4 → criteria 17–20; old criterion 5 → criteria 21–22. All new items were initially unchecked because the former combined criteria were unchecked; the evidence reconciliation below records later supported items.
+
+### Evidence reconciliation — 2026-10-28
+
+- Checked 1–4, 6–9, 12–13 and 18 from the 2026-10-26 tester record of OWNER create/list/revoke/explicit replacement, nonmember 404, role validation, seven-day stored expiry, hash-only storage and normalized duplicate handling. Checked 11 from T06's recorded redemption by an account whose e-mail differed from the informational label. Existing evidence was mapped; these requests were not rerun.
+- Left 5 open because the exact 403 matrix by management operation was not recorded; 10 for the unverified informational UI wording; 14–15 for missing direct old-link invalidation and replacement-link one-time UI observations; 16 for untested concurrent issue/replace; 17 for private forwarding beyond the observed copy; 19–20 for the incomplete foreign-operation and address-label visibility matrix; 21 for the unobserved visible forwarding warning; and 22 because absence of outbound e-mail was not directly verified. Server-log inspection also remains open.
+
+## Verification checklist
 
 - **CSRF hardening follow-up implementation — 2026-10-26:** Applied the shared `WEB_ORIGIN` + JSON media-type guard to authenticated invitation creation and revocation. The invitation UI now sends JSON `Content-Type` on DELETE as well as POST. API ESLint, API `tsc --noEmit`, web ESLint and web TypeScript checks passed after the T05 Prisma client was regenerated. Runtime/browser request verification was pending at this point and is recorded below; no automated tests were added or run.
 

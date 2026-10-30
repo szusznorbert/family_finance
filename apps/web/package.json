@@ -12,6 +12,7 @@
   "dependencies": {
     "@household-finance/shared": "workspace:*",
     "better-auth": "1.7.12",
+    "compresso.js": "1.0.2",
     "next": "16.4.3",
     "react": "19.3.0",
     "react-dom": "19.3.0"

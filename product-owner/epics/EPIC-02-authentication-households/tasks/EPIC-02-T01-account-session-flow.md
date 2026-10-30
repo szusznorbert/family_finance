@@ -18,6 +18,12 @@ This record covers the follow-up request to require password confirmation during
 - **Acceptance and verification:** The confirmation field appears only during registration; mismatch prevents the API call and shows an accessible Hungarian error; matching passwords preserve the existing registration flow. Future task files include a dated planning record before code changes. Per the user's instruction, do not add or run automated tests for this change.
 - **Open decisions:** None.
 
+## Implementation checklist
+
+- [x] Better Auth user, session and account persistence is configured in `apps/api/src/lib/auth.ts` and `apps/api/prisma/schema.prisma`.
+- [x] Registration and sign-in UI use `apps/web/src/app/auth-form.tsx`; password confirmation is validated client-side and omitted from the auth request.
+- [x] `apps/api/src/app/api/v1/me/route.ts` and auth routes derive identity from the authenticated session; sign-out/session handling uses Better Auth.
+
 ## Acceptance criteria
 
 - [x] A new person can register with email/password, then sign in; registering an account alone grants no household access.
@@ -25,7 +31,7 @@ This record covers the follow-up request to require password confirmation during
 - [x] A valid account can sign in, reload/navigate without losing its valid session, sign out, and no longer reach the authenticated `/api/v1/me` endpoint or household actions with the ended session. Household actions start in T02 and must enforce the same server-side session check.
 - [x] Invalid credentials, expired sessions and unauthenticated API calls produce clear, non-sensitive responses; browser redirects and session cookies work through the chosen web/API origin arrangement.
 
-## Verification
+## Verification checklist
 
 - [x] Exercise sign-in, reload, sign-out and expired/invalid session through both the browser and API with synthetic accounts.
 - [x] Manually check that mismatched passwords show an accessible Hungarian error without an auth request, matching passwords register successfully, and login has no confirmation field. Do not add or run automated tests for this follow-up.
@@ -39,7 +45,7 @@ No EPIC-02 task dependency. Open registration is an approved MVP product decisio
 
 Password reset, social login, mobile/Flutter session transport and account deletion are outside this task. The MVP's invitation policy treats a link as a bearer secret, not a claim that the signed-in account controls the invitation's informational e-mail address.
 
-## Manual verification record — 2026-10-26
+## Current status and evidence — manual verification record, 2026-10-26
 
 - `CI=true pnpm typecheck`, `CI=true pnpm lint` and `CI=true pnpm build` passed with Node.js 24.22.1. The web dependency and lockfile use the existing Better Auth 1.7.12 version.
 - On a separate local PostgreSQL 17 container and web/API instances at `localhost:3100`/`:3101`, a synthetic account registered through `/api/auth/sign-up/email` and immediately reached `GET /api/v1/me` with HTTP 200. The same endpoint returned 401 without a session and after sign-out.

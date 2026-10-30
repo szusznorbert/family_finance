@@ -33,18 +33,61 @@ enum HouseholdRole {
 }
 
 model Household {
-  id                String                      @id @default(cuid())
-  name              String                      @db.VarChar(100)
-  currency          String                      @default("RON") @db.VarChar(3)
-  createdAt         DateTime                    @default(now())
-  updatedAt         DateTime                    @updatedAt
-  members           HouseholdMember[]
-  categories        ExpenseCategory[]
-  invitations       HouseholdInvitation[]
-  memberAuditEvents HouseholdMemberAuditEvent[]
+  id                    String                      @id @default(cuid())
+  name                  String                      @db.VarChar(100)
+  currency              String                      @default("RON") @db.VarChar(3)
+  createdAt             DateTime                    @default(now())
+  updatedAt             DateTime                    @updatedAt
+  members               HouseholdMember[]
+  categories            ExpenseCategory[]
+  invitations           HouseholdInvitation[]
+  memberAuditEvents     HouseholdMemberAuditEvent[]
+  ledgerEntries         LedgerEntry[]
+  recurringExpenseRules RecurringExpenseRule[]
+  documents             Document[]
 
   @@index([createdAt])
   @@map("household")
+}
+
+enum DocumentStatus {
+  STAGING
+  AVAILABLE
+  FAILED
+
+  @@map("document_status")
+}
+
+model Document {
+  id                 String         @id @default(cuid())
+  householdId        String
+  uploadedByUserId   String
+  uploadRequestKey   String?        @db.Uuid
+  storageKey         String         @unique @db.Char(64)
+  status             DocumentStatus @default(STAGING)
+  displayName        String         @db.VarChar(255)
+  declaredMimeType   String         @db.VarChar(255)
+  detectedMimeType   String?        @db.VarChar(255)
+  byteSize           BigInt?
+  sha256             String?        @db.Char(64)
+  createdAt          DateTime       @default(now())
+  availableAt        DateTime?
+  household          Household      @relation(fields: [householdId], references: [id], onDelete: Restrict)
+
+  @@unique([householdId, id])
+  @@unique([householdId, uploadedByUserId, uploadRequestKey])
+  @@index([householdId, status, createdAt])
+  @@index([householdId, sha256])
+  @@map("document")
+}
+
+model DocumentUploadRateBucket {
+  userId      String
+  minuteStart DateTime @db.Timestamp(3)
+  count       Int      @default(1)
+
+  @@id([userId, minuteStart])
+  @@map("document_upload_rate_bucket")
 }
 
 enum HouseholdInvitationStatus {
@@ -113,16 +156,139 @@ model HouseholdMemberAuditEvent {
 }
 
 model ExpenseCategory {
-  id          String    @id @default(cuid())
-  householdId String
-  name        String    @db.VarChar(100)
-  sortOrder   Int       @default(0)
-  createdAt   DateTime  @default(now())
-  household   Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  id                    String                 @id @default(cuid())
+  householdId           String
+  name                  String                 @db.VarChar(100)
+  normalizedName        String                 @db.Text
+  sortOrder             Int                    @default(0)
+  archivedAt            DateTime?
+  createdAt             DateTime               @default(now())
+  household             Household              @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  ledgerEntries         LedgerEntry[]
+  recurringExpenseRules RecurringExpenseRule[]
 
-  @@unique([householdId, name])
+  @@unique([householdId, normalizedName])
+  @@unique([householdId, id])
   @@index([householdId, sortOrder])
   @@map("expense_category")
+}
+
+enum LedgerEntryType {
+  INCOME
+  EXPENSE
+  REFUND
+
+  @@map("ledger_entry_type")
+}
+
+enum LedgerSourceType {
+  MANUAL
+  RECEIPT
+  RECURRENT
+
+  @@map("ledger_source_type")
+}
+
+enum LedgerEntryRevisionAction {
+  UPDATED
+  ARCHIVED
+
+  @@map("ledger_entry_revision_action")
+}
+
+enum RecurringExpenseRuleRevisionAction {
+  UPDATED
+  STOPPED
+
+  @@map("recurring_expense_rule_revision_action")
+}
+
+model RecurringExpenseRule {
+  id              String                         @id @default(cuid())
+  householdId     String
+  name            String                         @db.VarChar(100)
+  amount          Decimal                        @db.Decimal(18, 2)
+  categoryId      String
+  dayOfMonth      Int
+  startMonth      DateTime                       @db.Date
+  stoppedAt       DateTime?
+  version         Int                            @default(1)
+  createdByUserId String
+  createdAt       DateTime                       @default(now())
+  updatedAt       DateTime                       @updatedAt
+  household       Household                      @relation(fields: [householdId], references: [id], onDelete: Restrict)
+  category        ExpenseCategory                @relation(fields: [householdId, categoryId], references: [householdId, id], onDelete: Restrict)
+  ledgerEntries   LedgerEntry[]
+  revisions       RecurringExpenseRuleRevision[]
+
+  @@unique([householdId, id])
+  @@index([householdId, stoppedAt])
+  @@index([householdId, categoryId])
+  @@map("recurring_expense_rule")
+}
+
+model RecurringExpenseRuleRevision {
+  id                   String                             @id @default(cuid())
+  recurringRuleId      String
+  actorUserId          String
+  action               RecurringExpenseRuleRevisionAction
+  requestKey           String
+  requestHash          String                             @db.Char(64)
+  previousState        Json
+  newState             Json
+  createdAt            DateTime                           @default(now())
+  recurringRule        RecurringExpenseRule               @relation(fields: [recurringRuleId], references: [id], onDelete: Restrict)
+  ledgerEntryRevisions LedgerEntryRevision[]
+
+  @@unique([recurringRuleId, requestKey])
+  @@index([recurringRuleId, createdAt])
+  @@map("recurring_expense_rule_revision")
+}
+
+model LedgerEntry {
+  id                String                @id @default(cuid())
+  householdId       String
+  type              LedgerEntryType
+  amount            Decimal               @db.Decimal(18, 2)
+  currency          String                @default("RON") @db.Char(3)
+  occurredOn        DateTime              @db.Date
+  categoryId        String?
+  note              String?               @db.VarChar(500)
+  createdByUserId   String
+  sourceType        LedgerSourceType
+  sourceId          String
+  sourceRequestHash String?               @db.Char(64)
+  recurringRuleId   String?
+  recurringMonth    DateTime?             @db.Date
+  archivedAt        DateTime?
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+  household         Household             @relation(fields: [householdId], references: [id], onDelete: Restrict)
+  category          ExpenseCategory?      @relation(fields: [householdId, categoryId], references: [householdId, id], onDelete: Restrict)
+  recurringRule     RecurringExpenseRule? @relation(fields: [householdId, recurringRuleId], references: [householdId, id], onDelete: Restrict)
+  revisions         LedgerEntryRevision[]
+
+  @@unique([sourceType, sourceId])
+  @@unique([recurringRuleId, recurringMonth])
+  @@index([householdId, occurredOn, id])
+  @@index([householdId, categoryId])
+  @@map("ledger_entry")
+}
+
+model LedgerEntryRevision {
+  id                      String                        @id @default(cuid())
+  ledgerEntryId           String
+  actorUserId             String
+  action                  LedgerEntryRevisionAction
+  previousState           Json
+  recurringRuleRevisionId String?
+  createdAt               DateTime                      @default(now())
+  ledgerEntry             LedgerEntry                   @relation(fields: [ledgerEntryId], references: [id], onDelete: Restrict)
+  recurringRuleRevision   RecurringExpenseRuleRevision? @relation(fields: [recurringRuleRevisionId], references: [id], onDelete: Restrict)
+
+  @@index([ledgerEntryId, createdAt])
+  @@index([recurringRuleRevisionId])
+  @@map("ledger_entry_revision")
 }
 
 model Session {

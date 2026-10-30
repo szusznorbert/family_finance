@@ -16,13 +16,19 @@ Establish reusable API-side session, membership and operation checks for OWNER, 
 - **Manual verification:** In the already running local app, use synthetic accounts A and B with separate households. Confirm A's and B's `GET /api/v1/households` responses contain only their own memberships; `GET` and `POST /api/v1/households` without a session return 401; a signed-in account can create a new household as OWNER regardless of its role in any other household. Inspect the helper's fresh-membership lookup and 401/404/403 mapping. There is no current ID-scoped route on which to observe 404 or 403, so T04/T05/T07 must manually verify those responses and role-specific allow/deny through their real endpoints. Use synthetic local data in place; do not add or run automated tests. Lint/typecheck/build are separate quality checks.
 - **Open decisions:** None for this bounded task. The role set and 401/404/403 boundary are accepted; ownership transfer and detailed future financial permissions belong to later tasks.
 
+## Implementation checklist
+
+- [x] Supported household role enum is OWNER, MEMBER and VIEWER in `apps/api/prisma/schema.prisma`; the data-preserving role migration is present in `apps/api/prisma/migrations/`.
+- [x] `apps/api/src/lib/household-authorization.ts` loads the current session and membership for household-scoped operations.
+- [x] The shared helper maps unauthenticated, foreign/nonmember and insufficient-role requests to the documented 401/404/403 boundary.
+
 ## Acceptance criteria
 
 - [x] Existing collection routes require a valid session; `GET /api/v1/households` includes only the caller's memberships, and `POST /api/v1/households` gives the signed-in creator OWNER regardless of any role in other households.
 - [x] A reusable policy for future ID-scoped routes loads current membership from the API database and applies the accepted response boundary: 401 without a session, 404 for a missing household or a caller who is not its member, and 403 for a member whose role cannot perform the operation. Responses do not reveal another household's existence.
 - [x] OWNER, MEMBER and VIEWER form the supported role set. Role-specific allow/deny behavior is verified when T04, T05 and T07 add operations with different permissions; T03 does not create artificial routes solely to demonstrate role differences.
 
-## Verification
+## Verification checklist
 
 - [x] In the existing local app with synthetic accounts, manually check `GET/POST /api/v1/households` with and without a session and confirm household lists are membership-scoped. Review the policy helper's current-membership lookup and 401/404/403 mapping; T04/T05/T07 manually verify role differences on their new routes. Do not add or run automated tests for this MVP work.
 - [x] Run lint/typecheck/build as implementation quality checks and record observed results.

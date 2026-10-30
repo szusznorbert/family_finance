@@ -1,0 +1,438 @@
+.householdsPanel {
+  margin-top: 0;
+  border: 0;
+  padding-top: 0;
+}
+
+.sectionHeading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.sectionHeading h2 {
+  margin: 4px 0 0;
+  color: var(--label-primary);
+  font-size: clamp(25px, 4vw, 32px);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.14;
+}
+
+.sectionHeading p {
+  margin: 8px 0 0;
+  color: var(--label-secondary);
+}
+
+.currencyBadge,
+.roleBadge {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  border: 1px solid color-mix(in srgb, var(--tint) 24%, var(--separator));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tint) 9%, var(--surface));
+  color: var(--label-primary);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.2;
+  padding: 5px 11px;
+  white-space: nowrap;
+}
+
+.managementGrid {
+  display: grid;
+  align-items: start;
+  gap: 18px;
+  margin-top: 22px;
+}
+
+.createPanel,
+.pickerPanel {
+  min-width: 0;
+}
+
+.createPanel {
+  padding: 18px;
+  border: 1px solid color-mix(in srgb, var(--separator) 72%, transparent);
+  border-radius: 18px;
+  background: var(--surface-secondary);
+}
+
+.createPanel h3,
+.pickerPanel h3,
+.householdDetails h4 {
+  margin: 0;
+  color: var(--label-primary);
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+}
+
+.householdChoices {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.householdChoice {
+  min-height: 64px;
+  border-color: var(--separator);
+  border-radius: 15px;
+  padding: 13px 14px;
+  background: var(--surface);
+}
+
+.householdChoiceSelected {
+  border-color: color-mix(in srgb, var(--tint) 55%, var(--separator));
+  background: color-mix(in srgb, var(--tint) 8%, var(--surface));
+}
+
+.householdChoice input {
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  flex: 0 0 auto;
+}
+
+.selectedContext {
+  display: grid;
+  gap: 14px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--separator);
+}
+
+.categoryList {
+  margin: 9px 0 0;
+  padding-left: 19px;
+  color: var(--label-secondary);
+  columns: 1;
+}
+
+.categoryList li + li {
+  margin-top: 4px;
+}
+
+.householdDetails {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid color-mix(in srgb, var(--separator) 72%, transparent);
+  border-radius: 18px;
+  background: var(--surface);
+}
+
+.householdDetails > p {
+  margin: 5px 0 0;
+}
+
+.householdDetails form {
+  max-width: 520px;
+}
+
+.fieldLabel {
+  display: block;
+  color: var(--label-primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.field {
+  width: 100%;
+  margin-top: 6px;
+  padding: 9px 12px;
+  border: 1px solid var(--field-border);
+  border-radius: var(--control-radius);
+  background: var(--field-fill);
+  color: var(--label-primary);
+}
+
+.actionButton {
+  min-height: 44px;
+  padding: 9px 14px;
+}
+
+.inlineMessage {
+  overflow-wrap: anywhere;
+}
+
+.managementCard {
+  min-width: 0;
+  margin-top: 0;
+  padding: 18px;
+  border: 1px solid color-mix(in srgb, var(--separator) 72%, transparent);
+  border-radius: 18px;
+  background: var(--surface);
+}
+
+.cardTitle {
+  margin: 0;
+  color: var(--label-primary);
+  font-size: 17px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.cardDescription {
+  max-width: 68ch;
+  margin: 6px 0 0;
+  color: var(--label-secondary);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.invitationForm {
+  display: grid;
+  align-items: end;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.formField {
+  min-width: 0;
+}
+
+.oneTimeLink {
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--warning) 45%, var(--separator));
+  border-radius: 15px;
+  background: color-mix(in srgb, var(--warning) 11%, var(--surface));
+}
+
+.oneTimeLink p {
+  margin: 0;
+}
+
+.linkControls {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.pendingBlock,
+.memberFooter {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--separator);
+}
+
+.subheading {
+  margin: 0;
+  color: var(--label-primary);
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.rows {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--separator);
+}
+
+.row:last-child {
+  border-bottom: 0;
+}
+
+.rowDetails {
+  min-width: 0;
+}
+
+.rowDetails p {
+  margin: 0;
+}
+
+.rowActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.rowActions button {
+  min-height: 44px;
+}
+
+.memberFooter p {
+  margin: 0 0 10px;
+  color: var(--label-secondary);
+}
+
+.transferControls {
+  display: grid;
+  gap: 8px;
+}
+
+.transferControls select {
+  min-width: 0;
+}
+
+.memberCard .cardDescription {
+  max-width: 50ch;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.memberCard .rows {
+  margin-top: 10px;
+}
+
+.memberCard .row {
+  gap: 6px;
+  padding: 11px 0;
+}
+
+.memberCard .rowDetails {
+  flex: 1;
+}
+
+.memberIdentity {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+
+.memberName {
+  margin: 0;
+  color: var(--label-primary);
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.memberRole {
+  min-height: 25px;
+  padding: 3px 8px;
+  font-size: 11px;
+}
+
+.memberEmail {
+  margin: 3px 0 0;
+  color: var(--label-secondary);
+  font-size: 12px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.memberQuietAction {
+  display: inline-flex;
+  width: max-content;
+  max-width: 100%;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border: 1px solid color-mix(in srgb, var(--danger) 30%, var(--separator));
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--danger);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.memberQuietAction:hover {
+  background: color-mix(in srgb, var(--danger) 5%, var(--surface));
+}
+
+.memberQuietAction:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.memberCard .memberFooter {
+  margin-top: 12px;
+  padding-top: 14px;
+}
+
+.memberCard .transferControls button,
+.memberCard .rowActions button {
+  width: max-content;
+  max-width: 100%;
+}
+
+@media (min-width: 720px) {
+  .managementGrid {
+    grid-template-columns: minmax(230px, 0.72fr) minmax(0, 1.28fr);
+    gap: 22px;
+  }
+
+  .categoryList {
+    columns: 2;
+  }
+
+  .invitationForm {
+    grid-template-columns: minmax(0, 1fr) minmax(150px, 0.45fr);
+  }
+
+  .invitationForm > button {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  .linkControls {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+  }
+
+  .transferControls {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+
+@media (min-width: 1024px) {
+  .invitationForm {
+    grid-template-columns: minmax(0, 1fr) minmax(150px, 0.45fr) auto;
+  }
+
+  .invitationForm > button {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 520px) {
+  .sectionHeading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .managementGrid {
+    margin-top: 18px;
+  }
+
+  .createPanel,
+  .householdDetails,
+  .managementCard {
+    padding: 15px;
+  }
+
+  .rowActions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr));
+  }
+
+  .rowActions button,
+  .transferControls button,
+  .linkControls button {
+    width: 100%;
+  }
+}

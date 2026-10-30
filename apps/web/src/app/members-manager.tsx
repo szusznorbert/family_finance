@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import styles from "./household-management.module.css";
 
 type HouseholdRole = "OWNER" | "MEMBER" | "VIEWER";
 type Member = {
@@ -163,29 +164,29 @@ export default function MembersManager({
   const transferCandidates = members.filter((member) => member.userId && !member.isSelf && member.role !== "OWNER");
 
   return (
-    <section className="mt-5 rounded-xl border border-slate-200 bg-white p-4" aria-labelledby="members-title" aria-busy={loading}>
-      <h4 className="font-semibold text-slate-900" id="members-title">Háztartástagok</h4>
-      <p className="mt-1 text-sm leading-5 text-slate-600">A tagok neve és szerepe minden háztartástag számára látható. Az e-mail-címek csak a tulajdonosnak és saját magadnak jelennek meg.</p>
+    <section className={`${styles.managementCard} ${styles.memberCard}`} aria-labelledby="members-title" aria-busy={loading}>
+      <h4 className={styles.cardTitle} id="members-title">Háztartástagok</h4>
+      <p className={styles.cardDescription}>A tagok neve és szerepe mindenki számára látható. Az e-mail-címet csak a tulajdonos és az érintett tag látja.</p>
 
       {loading ? (
         <p className="mt-3 text-sm text-slate-600" role="status">Tagok betöltése…</p>
       ) : members.length === 0 ? (
         <p className="mt-3 text-sm text-slate-600">Nincs megjeleníthető tag.</p>
       ) : (
-        <ul className="mt-3 divide-y divide-slate-200">
+        <ul className={styles.rows}>
           {members.map((member, index) => (
-            <li className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between" key={member.userId ?? `${member.name}:${index}`}>
-              <div className="min-w-0">
-                <p className="break-words text-sm font-semibold text-slate-900">
-                  {member.name}{member.isSelf ? " (te)" : ""}
-                </p>
-                <p className="mt-1 text-sm text-slate-600">{roleLabel(member.role)}</p>
-                {member.email && <p className="mt-1 break-all text-xs text-slate-500">{member.email}</p>}
+            <li className={styles.row} key={member.userId ?? `${member.name}:${index}`}>
+              <div className={styles.rowDetails}>
+                <div className={styles.memberIdentity}>
+                  <p className={styles.memberName}>{member.name}{member.isSelf ? " (te)" : ""}</p>
+                  <span className={`${styles.roleBadge} ${styles.memberRole}`}>{roleLabel(member.role)}</span>
+                </div>
+                {member.email && <p className={styles.memberEmail}>{member.email}</p>}
               </div>
               {role === "OWNER" && !member.isSelf && member.userId && (
-                <div className="flex flex-wrap items-center gap-2">
+                <div className={styles.rowActions}>
                   <button
-                    className="rounded-lg border border-rose-300 px-3 py-2 text-sm font-medium text-rose-800 hover:bg-rose-50 disabled:opacity-60"
+                    className={styles.memberQuietAction}
                     disabled={busy}
                     onClick={() => {
                       if (window.confirm(`Eltávolítod ${member.name} tagot a háztartásból?`)) void removeMember(member.userId!);
@@ -199,12 +200,12 @@ export default function MembersManager({
         </ul>
       )}
 
-      <div className="mt-4 border-t border-slate-200 pt-4">
+      <div className={styles.memberFooter}>
         {role === "OWNER" && ownerCount === 1 ? (
           transferCandidates.length > 0 ? (
             <div className="space-y-2">
               <p className="text-sm text-slate-700">Te vagy az egyetlen tulajdonos. Kilépéskor a kiválasztott tag tulajdonos lesz, és te is kilépsz a háztartásból.</p>
-              <div className="flex flex-col gap-2 sm:flex-row">
+              <div className={styles.transferControls}>
                 <label className="sr-only" htmlFor="member-transfer-target">Új tulajdonos</label>
                 <select
                   className="min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
@@ -218,7 +219,7 @@ export default function MembersManager({
                   ))}
                 </select>
                 <button
-                  className="rounded-lg bg-emerald-800 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-900 disabled:opacity-60"
+                  className={styles.memberQuietAction}
                   disabled={busy || !transferTarget}
                   onClick={() => void leaveHousehold(transferTarget)}
                   type="button"
@@ -230,7 +231,7 @@ export default function MembersManager({
           )
         ) : (
           <button
-            className="rounded-lg border border-rose-300 px-3 py-2 text-sm font-medium text-rose-800 hover:bg-rose-50 disabled:opacity-60"
+            className={styles.memberQuietAction}
             disabled={busy}
             onClick={() => void leaveHousehold()}
             type="button"
@@ -238,8 +239,8 @@ export default function MembersManager({
         )}
       </div>
 
-      {error && <p className="mt-3 rounded-lg bg-rose-50 p-3 text-sm text-rose-800" role="alert">{error}</p>}
-      {notice && <p className="mt-3 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-900" role="status">{notice}</p>}
+      {error && <p className={`${styles.inlineMessage} mt-3 rounded-lg bg-rose-50 p-3 text-sm text-rose-800`} role="alert">{error}</p>}
+      {notice && <p className={`${styles.inlineMessage} mt-3 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-900`} role="status">{notice}</p>}
     </section>
   );
 }

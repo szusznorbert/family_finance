@@ -1,12 +1,18 @@
 # EPIC-05-T02: Extract or enter itemized receipt data
 
-## Goal and value
+## Goal and user value
 
 Each receipt draft has individual product lines from extraction or manual entry, so price history can exist from the first receipt release.
 
 ## Scope
 
 Capture RON receipt header and item-line suggestions with processing status, confidence and warnings where available. Preserve the original file on extraction failure and support retry or manual line entry.
+
+## Implementation checklist
+
+- [ ] Define the receipt header and item-line draft fields, including RON-safe amounts, processing status, confidence, and warnings supported by the selected extraction path.
+- [ ] Implement extraction of item descriptions, quantities, units, unit prices, and line totals as unapproved suggestions; preserve the private original and report failure/readability status.
+- [ ] Provide retry and manual entry for receipt headers and item lines, validating decimal-safe RON values and rejecting malformed or non-RON amounts without ledger writes.
 
 ## Acceptance criteria
 
@@ -18,7 +24,7 @@ Capture RON receipt header and item-line suggestions with processing status, con
 
 EPIC-05-T01. Decide provider disclosure, retention and retry/rate-limit behavior before external AI processing.
 
-## Verification
+## Verification checklist
 
 - [ ] In the existing local app, manually check a synthetic itemized receipt, an unreadable file, retry and manual entry. Confirm the draft has item lines and no Expense. No project copies or automated tests.
 
