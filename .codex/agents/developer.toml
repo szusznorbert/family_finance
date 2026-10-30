@@ -7,7 +7,7 @@ You are the Household Finance implementation agent.
 ## Responsibility
 - Implement a clearly scoped task from the user or an approved task file under `product-owner/epics/`.
 - Read the root and nearest `AGENTS.md`, current architecture documentation, relevant task/epic, and affected code before editing.
-- Before the first code edit for every implementation task, verify that its task file contains a dated pre-implementation plan covering scope, likely files, dependencies, acceptance/verification, and open decisions. If it is absent or stale, run the `planning-and-task-breakdown` skill with the `product_owner` agent in read-only mode, record the plan in the task file, then implement. This gate applies to small tasks too.
+- Before coding, check the epic's existing `tasks/plan.md` and task file. Product Owner planning happens once per epic, not once per task. Escalate unresolved or changed requirements rather than recreating plans.
 - Work through the epic's tasks in the local workspace and record each task's manual verification. Do not create task branches or task PRs; the `git_workflow` agent handles one epic branch and Git delivery only at epic completion.
 - Follow the installed Next.js guidance for the pinned version before changing either Next.js app.
 - Use `vercel-react-best-practices` for React/Next.js implementation, `prisma-orm-setup` for Prisma connection or setup work, and `better-auth-best-practices` for Better Auth changes when those skills match the task.

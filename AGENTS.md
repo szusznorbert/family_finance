@@ -23,17 +23,17 @@ These instructions apply to every agent working in this repository. Read the nea
 7. When an accepted change alters the architecture, stack, data flow, or tool versions, update `docs/architecture.md` and review the affected `.codex/agents/*.toml` instructions and `.agents/skills/` mappings. Update those instructions when their responsibilities or assumptions changed; update skill content or `skills-lock.json` only after reviewing and explicitly accepting a skill update. Record any new architecture decision in `docs/decisions/` when appropriate.
 8. Report concrete file references, commands, and observed verification results. Do not claim checks that were not run.
 9. Respond in the user’s language; use Hungarian by default for user-facing summaries unless the user asks otherwise.
-10. Before coding on every implementation task, run a read-only planning pass with the `planning-and-task-breakdown` skill and the `product_owner` agent. Record the planning date, task-specific scope, likely files, dependencies, acceptance/verification steps, and open decisions in the task file before the first code edit. If the plan record is missing, do the planning pass first; do not skip it for small tasks. Planning approval follows the selected Codex workflow execution mode; see the workflow policy below.
+10. The product_owner plans an epic **once**, writing its `tasks/plan.md` and `EPIC-XX-TYY` task records. Task execution reads these existing records and does not repeat Product Owner planning; replan only if the epic's scope or dependencies materially change.
 
-## Codex workflow policy (EPIC-09)
-- Keep all seven existing specialist agents, their role boundaries, and the project skills. A Skill is reusable knowledge, not a workflow state machine.
-- For feature work, bug fixes, and refactoring, select the matching definition under `.codex/workflows/`. These YAML files are **project-owned data**, interpreted by `scripts/workflow/engine.py`; Codex does not run YAML workflows natively.
-- Start every tracked implementation request with `Workflow: new-feature|bug-fix|refactoring`, `Mode: auto|plan-only`, and `Task: EPIC-XX-TYY` on three separate lines. Default to plan-only if the mode was not stated; ask only when a workflow must begin and no safe default applies.
-- The main Codex agent coordinates each workflow, but may not mark steps as complete itself. Use `python3 scripts/workflow/engine.py begin --step NAME` before delegating and `complete --step NAME --evidence PATH` afterward. Respect `depends_on` and fail-closed verification gates. Keep one tracked workflow per checkout.
-- Before editing application code, complete the read-only `planning` step with `product_owner` and `planning-and-task-breakdown`; use the existing `product-owner/epics/<epic>/tasks/EPIC-XX-TYY*.md` record, never create an unrelated `tasks/todo.md`.
-- `auto`: proceed from validated planning to implementation, tests and review, provided no unresolved product/authorization/security decision remains.
-- `plan-only`: stop after planning and report the run ID. The **user** must send `Approve plan: run-<id>` in the IDE chat. No agent may approve its own plan or proceed until the approval is recorded.
-- Each verification step must execute the repository's configured quality gates and record exit codes. A failing verification or review requires repair and re-verification, never skipping failed steps or falsifying evidence.
-- Follow the existing Git policy: one epic delivery, explicit permission for branch/commit/push/PR, no deployment or database destruction without explicit approval. Auto mode does not waive these.
-- The local read-only Activity monitor displays current workflow/step/agent and any observed token statistics. Agent token attribution is **not** exact unless trace/session IDs prove it; record unknown usage as Unattributed. Never store prompts, secrets, code or real family financial data in telemetry.
-- Hooks protect only tool paths supported by the installed Codex IDE version. They are a guardrail, not a complete security boundary. If a hook is untrusted/disabled, report the limitation instead of claiming enforcement.
+## Rapid deterministic workflow policy
+
+- The **product_owner** splits each epic into tasks once. Keep the existing `product-owner/epics/<epic>/tasks/plan.md`, task dependencies and acceptance criteria.
+- `epic-planning`: run Product Owner and the planning Skill once; `task-execution`: Main Agent implements an existing task then performs a small verification; `epic-stabilization`: full checks at epic completion.
+- The local Python engine validates step ordering. YAML definitions are custom data, not native Codex workflow automation. Hooks are best-effort and must be tested in the IDE.
+- Default mode `auto`. `plan-only` pauses for a real user approval. Never treat agent-generated approvals as user approvals.
+- Routine task execution uses the **Main Agent**. Invite architect, designer, developer, tester or reviewer only when their specialist knowledge is actually needed. Git Workflow is reserved for explicitly authorized epic delivery.
+- For code tasks, run a small relevant check, default `pnpm typecheck`. For documentation/cosmetic tasks, a manual report is sufficient if explicitly marked as untested. Authentication, isolation, financial logic, data integrity, migrations or security changes require targeted validation before completion.
+- Use `engine.py iterate --task EPIC-XX-TYY --reason '...'` for in-task refinements without replanning. An iteration invalidates earlier implementation and verification completion. New material scope needs an epic/task decision.
+- Start tracked requests using the lines `Workflow: epic-planning|task-execution|epic-stabilization`, `Mode: auto|plan-only`, `Task: EPIC-XX` (epic) or `Task: EPIC-XX-TYY` (task).
+- The Activity dashboard reports engine state, not an AI guess. Token attribution must be verifiable; unknown values remain Unattributed. Do not log prompts, secrets, source code or financial data.
+- Preserve existing Git delivery, security and external-action approval restrictions.
