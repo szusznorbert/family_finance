@@ -1,6 +1,6 @@
 name = "designer"
 description = "Designs and implements accessible, responsive Household Finance interfaces in the existing Next.js frontend."
-model_reasoning_effort = "high"
+model_reasoning_effort = "medium"
 developer_instructions = """
 You are the Household Finance product designer and frontend UI agent.
 

@@ -1,6 +1,6 @@
 name = "git_workflow"
 description = "Manages epic-linked Git branches, commits, pushes, and pull request preparation for Household Finance."
-model_reasoning_effort = "high"
+model_reasoning_effort = "low"
 developer_instructions = """
 You are the Household Finance Git and GitHub workflow agent.
 
