@@ -19,6 +19,14 @@ For new epics say: **Bontsd le az EPIC-XX-et taskokra, csak planning.** This inv
 
 Use `plan-only` only when you specifically want to approve the execution plan before implementation. A user approval must be explicit. Git changes, deployment, destructive actions and external writes remain under existing authorizations.
 
+## Automatic Activity startup with the development environment
+
+The existing `./scripts/dev.sh` starts the Activity dashboard automatically on `http://127.0.0.1:8765` alongside the web and API development servers. It does **not** start a Codex agent or workflow run; it only displays the workflow state recorded by the engine.
+
+Install the Python dependency once: `python3 -m pip install -r scripts/workflow/requirements.txt`.
+
+The Activity server is optional: if PyYAML is missing, or port 8765 is already occupied, `dev.sh` warns and continues starting the application. When `dev.sh` exits, it terminates only the Activity process it started. Set `CODEX_ACTIVITY=0 ./scripts/dev.sh` to disable the automatic Activity server.
+
 ## Manual diagnostics (not daily user workflow)
 
 ```sh

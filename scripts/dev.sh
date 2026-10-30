@@ -94,5 +94,46 @@ pnpm --filter api prisma:generate
 echo "Adatbázis migrációk alkalmazása..."
 pnpm --filter api exec prisma migrate dev --name init
 
+# The Activity dashboard is optional and must never prevent the web/API from starting.
+# Run it as a child of this script so Ctrl+C cleans it up as well.
+ACTIVITY_PID=""
+cleanup_activity() {
+  if [[ -n "$ACTIVITY_PID" ]]; then
+    kill "$ACTIVITY_PID" 2>/dev/null || true
+    wait "$ACTIVITY_PID" 2>/dev/null || true
+    ACTIVITY_PID=""
+  fi
+}
+trap cleanup_activity EXIT
+
+if [[ "${CODEX_ACTIVITY:-1}" == "1" ]]; then
+  if python3 -c 'import yaml' >/dev/null 2>&1; then
+    if python3 - <<'PY'
+import socket
+with socket.socket() as s:
+    try:
+        s.bind(("127.0.0.1", 8765))
+    except OSError:
+        raise SystemExit(1)
+PY
+    then
+      python3 scripts/workflow/activity.py --port 8765 &
+      ACTIVITY_PID=$!
+      sleep 0.3
+      if kill -0 "$ACTIVITY_PID" 2>/dev/null; then
+        echo "Codex Activity: http://127.0.0.1:8765"
+      else
+        echo "Figyelmeztetés: az Activity szerver nem indult el; a fejlesztői környezet folytatódik." >&2
+        wait "$ACTIVITY_PID" 2>/dev/null || true
+        ACTIVITY_PID=""
+      fi
+    else
+      echo "Figyelmeztetés: a 8765-ös port foglalt. Az Activity szervert nem indítom újra." >&2
+    fi
+  else
+    echo "Figyelmeztetés: az Activity nézethez PyYAML kell: python3 -m pip install -r scripts/workflow/requirements.txt" >&2
+  fi
+fi
+
 echo "Indítom a webalkalmazást és az API-t. Leállításhoz nyomj Ctrl+C-t."
 pnpm dev
