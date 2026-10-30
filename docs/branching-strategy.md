@@ -4,7 +4,7 @@ Work locally through an epic and its `EPIC-XX-TYY` tasks. Create one branch, com
 
 ## Task IDs and planning
 
-Keep task IDs and files under `product-owner/epics/<epic-folder>/tasks/`; they link requirements, implementation notes and verification within the epic. Before coding each task, complete the read-only `planning-and-task-breakdown` pass with the `product_owner` agent and record its date, scope, likely files, dependencies, acceptance, verification and open decisions in that task file. Small tasks follow the same gate. Planning does not require the app's Plan mode or extra approval unless a product decision is unresolved.
+Keep task IDs and files under `product-owner/epics/<epic-folder>/tasks/`; they link requirements, implementation notes and verification within the epic. Run `planning-and-task-breakdown` once per epic when Product Owner prepares the epic task files and `tasks/plan.md`. Each task execution reads that existing plan, task dependencies and acceptance criteria; it does not repeat planning unless the epic's scope or required decisions change. Minor UI iterations remain part of the current task.
 
 ## Epic branch and local work
 

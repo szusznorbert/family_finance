@@ -1,0 +1,7 @@
+id: epic-planning
+version: 2
+steps:
+  - id: planning
+    agent: product_owner
+    depends_on: []
+    evidence: planning_artifact

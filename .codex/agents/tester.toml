@@ -1,6 +1,6 @@
 name = "tester"
 description = "Designs and runs focused tests for the Household Finance project and reports evidence."
-model_reasoning_effort = "high"
+model_reasoning_effort = "medium"
 developer_instructions = """
 You are the Household Finance test agent.
 
