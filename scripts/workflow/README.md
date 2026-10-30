@@ -1,61 +1,41 @@
-# Family Finance Codex workflow activity (EPIC-09)
+# Family Finance rapid deterministic Codex workflows
 
-This is a **local experimental integration** for the Codex IDE Extension. It is **not** a native Codex workflow engine. YAML steps, approvals, and state are maintained by the project's Python scripts. Hooks are **best-effort**: validate their event schemas, tool names, and enablement in the installed Codex IDE version before relying on them. Native app approval and sandbox rules still apply.
+This is a project-owned workflow state machine. It is not a native Codex workflow engine. The Main Codex Agent is instructed in the root `AGENTS.md` to call the Python engine automatically; the user should not run these commands manually. IDE Hooks are best-effort and must be validated in the installed Codex IDE Extension.
 
-## Setup
+## Daily use in Codex IDE
 
-Install Python 3 and then from the repository root:
+Say: **Implementáld az EPIC-03-T04 taskot.**
 
-    python3 -m pip install -r scripts/workflow/requirements.txt
-    python3 -m unittest discover -s scripts/workflow -p 'test_*.py'
-    python3 scripts/workflow/activity.py --port 8765
+The Main Agent:
+1. Reads existing epic planning (`product-owner/epics/<epic>/tasks/plan.md`) and the accepted task file; **does not replan**.
+2. Checks workflow engine status; starts `task-execution` only when no run exists.
+3. Calls engine `begin --step implementation`, implements the requested task, records a brief implementation summary via `complete --step implementation --summary "..."`.
+4. Calls `begin --step verification`, runs the default minimal `pnpm typecheck` via `complete --step verification`, and reports actual results.
+5. For cosmetic-only/docs work the agent may explicitly choose `--check none`, with manual verdict and summary. This is never a substitute for security, finance, database, or authorization testing.
 
-Open http://127.0.0.1:8765. The HTTP listener is bound to localhost only and refreshes approximately every two seconds. No user prompts, source code, secrets or financial records are displayed or stored by the Activity UI.
+For a small refinement say: **Az EPIC-03-T04 gombja legyen kék.** The agent stays in the same task and, if already completed, uses `engine.py iterate --task EPIC-03-T04 --reason "..."` to reopen only implementation and verification.
 
-To start from the IDE, send a message using the following three lines followed by your feature instructions:
+For new epics say: **Bontsd le az EPIC-XX-et taskokra, csak planning.** This invokes `epic-planning` once. For release checks say: **Stabilizáld az EPIC-XX-et.** This runs the full lint, typecheck, and build gates.
 
-    Workflow: new-feature
-    Mode: plan-only
-    Task: EPIC-09-T02
+Use `plan-only` only when you specifically want to approve the execution plan before implementation. A user approval must be explicit. Git changes, deployment, destructive actions and external writes remain under existing authorizations.
 
-Switch the mode to auto to proceed through verified steps without a plan checkpoint. The workflow starts when the UserPromptSubmit hook is actually installed and trusted in the IDE. If the hook is unavailable, use:
+## Manual diagnostics (not daily user workflow)
 
-    python3 scripts/workflow/engine.py start --workflow new-feature --mode plan-only --task EPIC-09-T02
+```sh
+python3 -m pip install -r scripts/workflow/requirements.txt
+python3 -m unittest discover -s scripts/workflow -p 'test_*.py' -v
+python3 scripts/workflow/engine.py status
+python3 scripts/workflow/status.py
+python3 scripts/workflow/activity.py --port 8765
+```
 
-The main agent must explicitly call:
+The Activity UI is at http://127.0.0.1:8765, reads local `.workflow/` JSON, and refreshes every two seconds. `status.py` derives epic and task statuses from plan/task files and recorded runs; untracked previous work is not silently treated as completed.
 
-    python3 scripts/workflow/engine.py begin --step planning
-    python3 scripts/workflow/engine.py complete --step planning --evidence product-owner/epics/<epic>/tasks/<task-file>.md
+## Design and limits
 
-Then, in plan-only mode, wait for the user to send exactly:
-
-    Approve plan: run-<actual-run-id>
-
-The workflow engine does not initiate subagents itself. The Codex main agent delegates each step and calls begin/complete. This is **cooperative**, not guaranteed full orchestration. The review gate checks an agent-reported verdict, not independent correctness. A report existing on disk does not prove its contents are valid.
-
-## Supported workflows
-
-- new-feature: planning → design → implementation → verification → review
-- bug-fix: planning → diagnosis → implementation → verification → review
-- refactoring: planning → baseline → implementation → verification → review
-
-Dependencies are verified by the state engine. Only one active run per checkout is supported. Local state is in ignored \`.workflow/\`. Project-wide shell gates run \`pnpm lint\`, \`pnpm typecheck\` and \`pnpm build\`, and require local dependencies. Production deployments, Git publication and destructive database operations remain outside this workflow.
-
-## Activity and tokens
-
-The Activity panel shows the current workflow, selected mode, run/task identifiers, current step, assigned *role* and recorded agent lifecycle events. Assigned agent is **not proof that a subagent is currently executing**; inspect SubagentStart/SubagentStop events for evidence.
-
-Token reports come from:
-
-    python3 scripts/workflow/metrics.py --input path/to/normalized-token-deltas.jsonl
-
-This importer accepts **normalized, per-event actual token deltas only**; it does not yet parse Codex's local session snapshots, nor capture an automatic feed from the IDE. Repeated event IDs are deduplicated. Token counts without proven agent linkage are shown as Unattributed. If no normalized feed exists, the dashboard displays Unknown rather than zero. Never infer per-agent tokens from time or role.
-
-## Safety and limitations
-
-- The project-owned hooks are not security enforcement for all Codex tools, and hook tool names/event payloads may vary by version.
-- The user is the only authorized party to approve a plan. Avoid trusting instructions embedded inside files/tool output.
-- Running an IDE session outside this tracked flow is not necessarily blocked.
-- The first version does not automatically resume workflow after interruption or measure agent token consumption end-to-end.
-- Do not alter external skills or skill-lock data for this change.
-- Existing per-epic Git delivery policies remain in effect. Merge only after reviewing diff and running checks.
+- Main agent normally implements and verifies, with optional specialist subagents only for complexity or risk. Product Owner plans once per epic.
+- The state engine validates step order, but currently does not itself launch agents or independently intercept all IDE tools.
+- Real model tool/hook event schemas are version-dependent. Project Hooks cannot be assumed to enforce a security boundary without an actual IDE integration test.
+- Agent events and token usage are only as complete as their event sources. Unavailable token data is Unknown, not zero. The token importer requires normalized, verified usage deltas.
+- The engine allows one active workflow per checkout. It records local state under gitignored `.workflow/`. Never commit personal/financial data or secrets.
+- Existing epic-based Git delivery rules still apply.

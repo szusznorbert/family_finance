@@ -6,6 +6,7 @@ on:
       - '.codex/hooks/**'
       - '.codex/hooks.json'
       - 'scripts/workflow/**'
+      - 'AGENTS.md'
       - '.github/workflows/codex-workflow-checks.yml'
   workflow_dispatch:
 jobs:
@@ -22,12 +23,12 @@ jobs:
         run: python -m compileall -q scripts/workflow .codex/hooks
       - name: Workflow regression tests
         run: python -m unittest discover -s scripts/workflow -p 'test_*.py' -v
-      - name: Validate workflow definitions
+      - name: Validate active workflow definitions
         run: |
           python - <<'PY'
           import sys
           sys.path.insert(0, "scripts/workflow")
           from engine import definition
-          for name in ("new-feature", "bug-fix", "refactoring"):
+          for name in ("epic-planning", "task-execution", "epic-stabilization"):
               print(name, len(definition(name)["steps"]), "steps")
           PY

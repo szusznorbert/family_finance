@@ -1,5 +1,4 @@
-"""Workflow ordering and attribution regression tests."""
-import json
+"""Deterministic rapid workflow regression checks."""
 import tempfile
 import unittest
 from pathlib import Path
@@ -10,82 +9,104 @@ import metrics
 class WorkflowTests(unittest.TestCase):
     def setUp(self):
         self.tmp=tempfile.TemporaryDirectory()
-        self.oldroot,self.oldbase,self.oldruns,self.oldactive,self.oldwf=(engine.ROOT,engine.BASE,engine.RUNS,engine.ACTIVE,engine.WF)
+        self.original=[engine.ROOT,engine.BASE,engine.RUNS,engine.ACTIVE,engine.WF]
         root=Path(self.tmp.name)
-        engine.ROOT=root
-        engine.BASE=root/".workflow";engine.RUNS=engine.BASE/"runs";engine.ACTIVE=engine.BASE/"active.json"
-        engine.WF=root/".codex"/"workflows"
-        engine.WF.mkdir(parents=True)
-        (engine.WF/"new-feature.yaml").write_text("""
-id: new-feature
-version: 1
+        engine.ROOT=root;engine.BASE=root/".workflow"
+        engine.RUNS=engine.BASE/"runs";engine.ACTIVE=engine.BASE/"active.json"
+        engine.WF=root/".codex"/"workflows";engine.WF.mkdir(parents=True)
+        for name,body in {
+          "epic-planning":"""id: epic-planning
+version: 2
 steps:
   - {id: planning, agent: product_owner, depends_on: [], evidence: planning_artifact}
-  - {id: design, agent: architect, depends_on: [planning], evidence: report}
-  - {id: implementation, agent: developer, depends_on: [design], evidence: report}
-  - {id: verification, agent: tester, depends_on: [implementation], evidence: command_gates, commands: [[python3, --version]]}
-  - {id: review, agent: reviewer, depends_on: [verification], evidence: passing_review}
-""")
-        task=root/"product-owner"/"epics"/"epic"/"tasks"/"EPIC-09-T02-workflow.md"
-        task.parent.mkdir(parents=True);task.write_text("# Reviewed plan\n")
-        self.plan=str(task.relative_to(root))
-        (root/"report.md").write_text("# Completed step\n")
+""",
+          "task-execution":"""id: task-execution
+version: 2
+steps:
+  - {id: implementation, agent: main, depends_on: [], evidence: report}
+  - {id: verification, agent: main, depends_on: [implementation], evidence: quick_verification}
+""",
+          "epic-stabilization":"""id: epic-stabilization
+version: 2
+steps:
+  - {id: verification, agent: main, depends_on: [], evidence: command_gates, commands: [[python3, --version]]}
+""",
+        }.items():
+            (engine.WF/(name+".yaml")).write_text(body)
+        self.epic=root/"product-owner"/"epics"/"EPIC-09-governance"
+        (self.epic/"tasks").mkdir(parents=True)
+        (self.epic/"epic.md").write_text("Epic specification")
+        (self.epic/"tasks"/"EPIC-09-T02-workflow.md").write_text("Acceptance criteria")
     def tearDown(self):
-        engine.ROOT,engine.BASE,engine.RUNS,engine.ACTIVE,engine.WF=self.oldroot,self.oldbase,self.oldruns,self.oldactive,self.oldwf
+        engine.ROOT,engine.BASE,engine.RUNS,engine.ACTIVE,engine.WF=self.original
         self.tmp.cleanup()
-    def advance(self,step,evidence=None,verdict=None):
-        engine.begin(step)
-        return engine.complete(step,evidence,verdict)
-    def test_dependency_order(self):
-        engine.start("new-feature","auto","EPIC-09-T02")
-        with self.assertRaises(engine.WorkflowError):engine.begin("implementation")
-        self.advance("planning",self.plan)
-        self.advance("design","report.md")
-        self.advance("implementation","report.md")
-        self.advance("verification")
-        run=self.advance("review","report.md","pass")
-        self.assertEqual(run["status"],"completed")
-    def test_plan_only_pauses(self):
-        run=engine.start("new-feature","plan-only","EPIC-09-T02")
-        self.advance("planning",self.plan)
-        self.assertEqual(engine.current()["status"],"awaiting_approval")
-        with self.assertRaises(engine.WorkflowError):engine.begin("design")
-        engine.approve(run["run_id"])
-        self.advance("design","report.md")
-        self.assertEqual(engine.current()["steps"]["design"]["status"],"completed")
-    def test_wrong_approval_rejected(self):
-        engine.start("new-feature","plan-only","EPIC-09-T02")
-        self.advance("planning",self.plan)
-        with self.assertRaises(engine.WorkflowError):engine.approve("run-aaaaaaaaaaaa")
-    def test_failed_review_and_rework(self):
-        engine.start("new-feature","auto","EPIC-09-T02")
-        self.advance("planning",self.plan);self.advance("design","report.md")
-        self.advance("implementation","report.md");self.advance("verification")
-        engine.begin("review")
-        with self.assertRaises(engine.WorkflowError):engine.complete("review","report.md","fail")
-        self.assertEqual(engine.current()["steps"]["review"]["status"],"failed")
-        engine.reopen("Need to fix reviewer findings")
-        self.assertEqual(engine.current()["steps"]["implementation"]["status"],"pending")
-    def test_no_concurrent_workflow(self):
-        engine.start("new-feature","auto","EPIC-09-T02")
-        with self.assertRaises(engine.WorkflowError):engine.start("new-feature","auto","EPIC-09-T02")
-    def test_invalid_plan_artifact(self):
-        engine.start("new-feature","auto","EPIC-09-T02")
+    def plan(self):
+        engine.start("epic-planning","auto","EPIC-09")
         engine.begin("planning")
-        with self.assertRaises(engine.WorkflowError):engine.complete("planning","report.md")
-    def test_fail_closed_verification(self):
-        engine.start("new-feature","auto","EPIC-09-T02")
-        self.advance("planning",self.plan);self.advance("design","report.md")
-        self.advance("implementation","report.md")
-        with patch.object(engine,"verify",return_value=[{"passed":False,"exit_code":1}]):
-            engine.begin("verification")
-            with self.assertRaises(engine.WorkflowError):engine.complete("verification")
-        with self.assertRaises(engine.WorkflowError):engine.begin("review")
-    def test_duplicate_token_event_excluded(self):
-        rec={"usage_event_id":"e1","workflow_run_id":"r1","workflow_type":"new-feature",
-             "source":"codex_usage_delta","usage":{"input_tokens":120,"cached_input_tokens":20,"output_tokens":30}}
-        result=metrics.aggregate([rec,rec])
-        self.assertEqual(result["by_run"][0]["total_tokens"],150)
+        (self.epic/"tasks"/"plan.md").write_text("Dependencies and task breakdown")
+        engine.complete("planning","product-owner/epics/EPIC-09-governance/tasks/plan.md")
+    def implement(self,check="none"):
+        engine.start("task-execution","auto","EPIC-09-T02",check=check)
+        engine.begin("implementation")
+        engine.complete("implementation",summary="Implemented task acceptance criteria.")
+    def test_planning_once_required(self):
+        with self.assertRaises(engine.WorkflowError):
+            engine.start("task-execution","auto","EPIC-09-T02")
+        self.plan();self.implement()
+        with self.assertRaises(engine.WorkflowError):engine.begin("implementation")
+    def test_deterministic_steps(self):
+        self.plan()
+        engine.start("task-execution","auto","EPIC-09-T02",check="none")
+        with self.assertRaises(engine.WorkflowError):engine.begin("verification")
+        engine.begin("implementation")
+        engine.complete("implementation",summary="Completed requested implementation.")
+        engine.begin("verification")
+        result=engine.complete("verification",summary="Reviewed cosmetic output manually.",verdict="pass")
+        self.assertEqual(result["status"],"completed")
+    def test_plan_only_waits_for_user(self):
+        self.plan()
+        run=engine.start("task-execution","plan-only","EPIC-09-T02")
+        with self.assertRaises(engine.WorkflowError):engine.begin("implementation")
+        with self.assertRaises(engine.WorkflowError):engine.approve("run-aaaaaaaaaaaa")
+        engine.approve(run["run_id"])
+        engine.begin("implementation")
+    def test_failed_verification_is_not_complete(self):
+        self.plan();self.implement()
+        engine.begin("verification")
+        with self.assertRaises(engine.WorkflowError):
+            engine.complete("verification",verdict="fail",summary="Manual inspection found a problem.")
+        self.assertEqual(engine.current()["steps"]["verification"]["status"],"failed")
+    def test_iterate_invalidates_verification(self):
+        self.plan();self.implement()
+        engine.begin("verification")
+        engine.complete("verification",verdict="pass",summary="Manually checked the changed label.")
+        run=engine.iterate("Adjust label", "EPIC-09-T02")
+        self.assertEqual(run["steps"]["verification"]["status"],"pending")
+        self.assertEqual(run["steps"]["implementation"]["status"],"pending")
+        self.assertEqual(len(run["iterations"]),1)
+    def test_fast_default_typecheck(self):
+        self.plan();self.implement(check="typecheck")
+        engine.begin("verification")
+        with patch.object(engine,"verify",return_value=[{"passed":True}]) as spy:
+            engine.complete("verification")
+        spy.assert_called_once_with([["pnpm","typecheck"]])
+    def test_stabilization_gates(self):
+        self.plan()
+        engine.start("epic-stabilization","auto","EPIC-09")
+        engine.begin("verification")
+        with patch.object(engine,"verify",return_value=[{"passed":True}]) as spy:
+            engine.complete("verification")
+        spy.assert_called_once_with([["python3","--version"]])
+    def test_no_duplicate_workflow(self):
+        self.plan()
+        engine.start("task-execution","auto","EPIC-09-T02")
+        with self.assertRaises(engine.WorkflowError):
+            engine.start("task-execution","auto","EPIC-09-T02")
+    def test_token_dedup(self):
+        row={"usage_event_id":"e1","workflow_run_id":"run-1","workflow_type":"task-execution",
+             "source":"codex_usage_delta","usage":{"input_tokens":100,"output_tokens":25,"cached_input_tokens":10}}
+        result=metrics.aggregate([row,row])
+        self.assertEqual(result["by_run"][0]["total_tokens"],125)
         self.assertEqual(result["by_agent"][0]["name"],"Unattributed")
 
 if __name__=="__main__":unittest.main()
