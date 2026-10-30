@@ -1,0 +1,33 @@
+name: Codex workflow checks
+on:
+  pull_request:
+    paths:
+      - '.codex/workflows/**'
+      - '.codex/hooks/**'
+      - '.codex/hooks.json'
+      - 'scripts/workflow/**'
+      - '.github/workflows/codex-workflow-checks.yml'
+  workflow_dispatch:
+jobs:
+  verify-workflow:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: python -m pip install -r scripts/workflow/requirements.txt
+      - name: Python syntax check
+        run: python -m compileall -q scripts/workflow .codex/hooks
+      - name: Workflow regression tests
+        run: python -m unittest discover -s scripts/workflow -p 'test_*.py' -v
+      - name: Validate workflow definitions
+        run: |
+          python - <<'PY'
+          import sys
+          sys.path.insert(0, "scripts/workflow")
+          from engine import definition
+          for name in ("new-feature", "bug-fix", "refactoring"):
+              print(name, len(definition(name)["steps"]), "steps")
+          PY
