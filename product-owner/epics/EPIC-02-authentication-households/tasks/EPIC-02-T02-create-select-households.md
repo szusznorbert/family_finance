@@ -8,7 +8,7 @@ An authenticated person can create a household, become its first owner, and choo
 
 Add household, membership and household-specific default category persistence, plus create/list/select behavior in the API and web. The new household, owner membership and default categories must succeed or fail together. The MVP uses RON only; household creation offers no currency selection and rejects a different currency supplied directly to the API.
 
-The nine approved default expense categories are: Élelmiszer és háztartási bevásárlás; Lakhatás; Rezsi és távközlés; Közlekedés; Egészség és gyógyszertár; Ruházat és személyes ápolás; Család és oktatás; Étterem és szabadidő; Egyéb.
+The nine approved default expense category labels (kept as exact Hungarian UI copy) are: `Élelmiszer és háztartási bevásárlás`; `Lakhatás`; `Rezsi és távközlés`; `Közlekedés`; `Egészség és gyógyszertár`; `Ruházat és személyes ápolás`; `Család és oktatás`; `Étterem és szabadidő`; `Egyéb`.
 
 ## Pre-implementation planning record — 2026-10-26
 
@@ -25,13 +25,38 @@ This planning round was completed before T02 implementation; its record was tran
 - **Dependencies, acceptance and manual verification:** Existing T01 session handling and T02 transactional creation remain the base; coordinate the shared guard with the T04/T05 follow-up. A signed-in same-origin JSON request still returns 201 with one RON household, OWNER membership and nine categories; no session still returns 401, and invalid business input retains its existing validation response when origin/media type are valid. With synthetic local accounts, try absent/foreign/`null` Origin and form, text, multipart or absent `Content-Type` through direct API requests; each must be rejected without a household, membership or category row being created. Confirm normal browser creation still works through the web proxy. Record actual results and run relevant lint/typecheck/build checks; do not add or run automated tests.
 - **Risks and decisions:** Compare against the configured web origin, not untrusted Host or forwarded headers. Confirm the local proxy sends the expected Origin. No new product decision or database migration is required.
 
+## Implementation checklist
+
+- [x] Household, membership and expense-category persistence plus the role-correction migration are present in `apps/api/prisma/schema.prisma` and `apps/api/prisma/migrations/`.
+- [x] `apps/api/src/app/api/v1/households/route.ts` atomically creates the household, first OWNER membership and nine default categories; it validates name and RON currency.
+- [x] Authenticated household list and web create/select flow are implemented in the same API route and `apps/web/src/app/households-panel.tsx`; selection is a client preference, revalidated by the API.
+
 ## Acceptance criteria
 
-- [ ] An authenticated account creates a household and sees an OWNER membership, RON currency and exactly the nine approved default expense categories; a failed create operation leaves none of these partially stored.
-- [ ] The account can create multiple households and select one; the list and selection expose only households where its current account is a member. Joining by invitation follows T06.
-- [ ] Unauthenticated requests fail; invalid household names or a non-RON currency are rejected without creating records; a second household starts with separate rows for the same nine categories.
+- [x] An authenticated account can create a household.
+- [x] The creator receives the first OWNER membership for the new household.
+- [x] A newly created household uses RON currency.
+- [x] A newly created household has exactly the nine approved default expense categories.
+- [ ] A failed create operation leaves no partial household, owner membership, or default categories.
+- [x] An account can create multiple households.
+- [x] An account can select a household it belongs to.
+- [ ] The household list and selection expose only households where the current account is a member.
+- [x] Joining by invitation follows T06.
+- [ ] Unauthenticated household requests fail.
+- [ ] Invalid household names are rejected without creating records.
+- [ ] A non-RON currency is rejected without creating records.
+- [ ] A second household receives its own separate rows for the same nine default categories.
 
-## Verification
+### Acceptance criteria decomposition note — 2026-10-28
+
+The three former combined criteria were decomposed as follows: old criterion 1 → criteria 1–5; old criterion 2 → criteria 6–9; old criterion 3 → criteria 10–13. All new items were initially unchecked because the former combined criteria were unchecked; the evidence reconciliation below records later supported items.
+
+### Evidence reconciliation — 2026-10-28
+
+- Checked 1–4 and 6–7 from the 2026-10-26 synthetic Alpha/Beta creation, OWNER/RON/nine-category, two-household selection and reload records; checked 9 from T06's recorded invitation acceptance and selectable household. This maps existing evidence only; no check was rerun.
+- Left 5 open because a partial-create rollback was never forced. Left 8 open because foreign-household selection was not directly exercised; 10 because only unauthenticated GET was recorded; 11–12 because the invalid-input 400 responses were not followed by an explicit record-count check; and 13 because separate category IDs for the second household were not directly compared.
+
+## Verification checklist
 
 - **CSRF hardening follow-up implementation — 2026-10-26:** Added the shared `WEB_ORIGIN` + JSON media-type guard to authenticated household creation. The guard rejects absent/malformed/mismatched Origin and invalid/missing `Content-Type` before any database write; `GET /api/v1/households` remains unchanged. API ESLint and `tsc --noEmit` passed after the T05 Prisma client was regenerated. Runtime request verification was pending at this point; later negative manual results are recorded below. No automated tests were added or run.
 - **Negative CSRF manual pass — 2026-10-26 (reported by the tester):** Using the authenticated synthetic T04 OWNER browser session, a JSON household-creation POST with a mismatched `Origin` returned `403 FORBIDDEN`. A POST with the matching `Origin` but `text/plain` returned `415`. An authenticated household GET still listed three households afterward, so neither rejected request created a household. The tester did not extract a session cookie or perform a valid creation in this pass. A missing-`Origin` request remains unchecked because the browser controls that header.

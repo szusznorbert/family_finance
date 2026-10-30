@@ -31,4 +31,4 @@ RUN if [ "$APP" = "api" ]; then \
 
 EXPOSE 3000 3001
 
-CMD ["sh", "-c", "if [ \"$APP\" = \"api\" ]; then pnpm --filter api db:deploy || exit 1; fi; exec pnpm --filter \"$APP\" start"]
+CMD ["sh", "-c", "if [ \"$APP\" = \"api\" ]; then pnpm --filter api db:deploy || exit 1; pnpm --filter api documents:reconcile || exit 1; fi; exec pnpm --filter \"$APP\" start"]

@@ -19,7 +19,7 @@ Establish the monorepo and repeatable local development and deployment foundatio
 
 ## Current state
 
-The monorepo, web and API apps, PostgreSQL Compose service, local startup script, environment template, and architecture documentation exist. The epic's fresh-checkout and container startup outcomes have not yet been verified end to end. The shared package is currently an empty scaffold, and the root lint command runs only where a package already defines a lint script.
+The four task files record their acceptance and verification checklists as complete. Dated evidence reports a successful fresh-checkout setup, a shared client-safe status contract, root quality checks across the workspaces, and migration-safe Compose startup including repeat-start and failure scenarios on disposable local volumes. These task records are dated primarily 2026-10-25; this summary is not a fresh verification run.
 
 ## Tasks
 

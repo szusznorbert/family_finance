@@ -1,0 +1,351 @@
+.page {
+  width: min(100%, 840px);
+  padding-bottom: calc(112px + env(safe-area-inset-bottom));
+}
+
+.backLink {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  margin-bottom: 12px;
+  color: var(--tint);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.heading {
+  margin-bottom: 22px;
+}
+
+.heading h1 {
+  margin: 0;
+  color: var(--label-primary);
+  font-size: clamp(28px, 7vw, 38px);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+
+.heading p {
+  margin: 7px 0 0;
+  color: var(--label-secondary);
+  font-size: 15px;
+}
+
+.details,
+.history,
+.editForm {
+  min-width: 0;
+  padding: 18px 0;
+  border-top: 1px solid var(--separator);
+}
+
+.details h2,
+.history h2,
+.editForm h2 {
+  margin: 0;
+  color: var(--label-primary);
+  font-size: 18px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.detailGrid,
+.revisionGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px 20px;
+  margin: 17px 0 0;
+}
+
+.detailGrid > div,
+.revisionGrid > div {
+  min-width: 0;
+}
+
+.detailGrid dt,
+.revisionGrid dt {
+  margin-bottom: 3px;
+  color: var(--label-secondary);
+  font-size: 13px;
+  font-weight: 550;
+}
+
+.detailGrid dd,
+.revisionGrid dd {
+  margin: 0;
+  color: var(--label-primary);
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.fullWidth {
+  grid-column: 1 / -1;
+}
+
+.notice,
+.sourceNotice,
+.historyEmpty,
+.status {
+  margin: 14px 0;
+  color: var(--label-secondary);
+  font-size: 14px;
+}
+
+.notice {
+  padding: 11px 13px;
+  border-left: 3px solid var(--success);
+  background: color-mix(in srgb, var(--success) 7%, var(--surface));
+  color: var(--label-primary);
+}
+
+.sourceNotice {
+  padding: 11px 0;
+  border-top: 1px solid var(--separator);
+}
+
+.feedback {
+  margin: 14px 0;
+  padding: 12px 0;
+  color: var(--danger);
+}
+
+.feedback h1 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.feedback p {
+  margin: 6px 0 0;
+}
+
+.feedback button,
+.feedback a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  margin-top: 10px;
+  padding: 8px 13px;
+  border: 1px solid var(--separator);
+  border-radius: 11px;
+  background: var(--surface);
+  color: var(--tint);
+  cursor: pointer;
+  font: inherit;
+  text-decoration: none;
+}
+
+.inlineError {
+  margin: 10px 0 0;
+  color: var(--danger);
+  font-size: 14px;
+}
+
+.actions,
+.formActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 14px 0 18px;
+}
+
+.editAction,
+.archiveAction,
+.formActions button,
+.archiveConfirmation button {
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid var(--separator);
+  border-radius: 11px;
+  background: var(--surface);
+  color: var(--tint);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+}
+
+.editAction {
+  border-color: color-mix(in srgb, var(--tint) 45%, var(--separator));
+  background: color-mix(in srgb, var(--tint) 8%, var(--surface));
+}
+
+.archiveAction {
+  color: var(--label-secondary);
+}
+
+.archiveConfirmation {
+  width: 100%;
+  padding: 12px 0 2px;
+  border-top: 1px solid var(--separator);
+}
+
+.archiveConfirmation p {
+  max-width: 68ch;
+  margin: 0;
+  color: var(--label-primary);
+  font-size: 14px;
+}
+
+.archiveConfirmation > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 10px;
+}
+
+.archiveConfirmation button:last-child {
+  border-color: color-mix(in srgb, var(--danger) 40%, var(--separator));
+  color: var(--danger);
+}
+
+.archiveConfirmation button:disabled,
+.formActions button:disabled {
+  cursor: wait;
+  opacity: 0.58;
+}
+
+.editForm {
+  margin-bottom: 17px;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 15px;
+  margin-top: 16px;
+}
+
+.field {
+  min-width: 0;
+}
+
+.field label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--label-secondary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.field input,
+.field select,
+.field textarea {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  padding: 9px 11px;
+  border: 1px solid var(--field-border);
+  border-radius: 11px;
+  background: var(--field-fill);
+  color: var(--label-primary);
+  font: inherit;
+}
+
+.field textarea {
+  min-height: 92px;
+  resize: vertical;
+}
+
+.formActions {
+  justify-content: flex-end;
+  padding-bottom: 0;
+}
+
+.formActions button[type="submit"] {
+  border-color: var(--tint);
+  background: var(--tint);
+  color: var(--tint-foreground);
+}
+
+.timeline {
+  margin: 16px 0 0 5px;
+  padding: 0 0 0 20px;
+  border-left: 1px solid var(--separator);
+  list-style: none;
+}
+
+.revision {
+  position: relative;
+  padding: 0 0 22px;
+}
+
+.revision:last-child {
+  padding-bottom: 0;
+}
+
+.revision::before {
+  position: absolute;
+  top: 5px;
+  left: -25px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--tint);
+  content: "";
+}
+
+.revisionHeading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 5px 12px;
+}
+
+.revisionHeading h3 {
+  margin: 0;
+  color: var(--label-primary);
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.revisionHeading time {
+  color: var(--label-secondary);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.actor {
+  margin: 5px 0 0;
+  color: var(--label-secondary);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.actor code {
+  color: var(--label-primary);
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.revisionGrid {
+  gap: 10px 16px;
+  margin-top: 12px;
+}
+
+.revisionGrid dt {
+  font-size: 12px;
+}
+
+.revisionGrid dd {
+  font-size: 14px;
+}
+
+@media (min-width: 620px) {
+  .detailGrid,
+  .revisionGrid,
+  .formGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 900px) {
+  .detailGrid,
+  .formGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

@@ -24,13 +24,19 @@ Add household detail and permitted name updates in the API and web. Apply the T0
 - **Dependencies, acceptance and verification:** Preserve T03 session/membership/OWNER policy and the existing 401/404/403 behavior for otherwise valid requests. With synthetic local households, send a valid OWNER PATCH through the web proxy and direct API using the configured origin and JSON media type; it must still save. Repeat with absent/foreign/`null` Origin and form, text, multipart or absent `Content-Type`; each must be rejected without changing the name. Confirm MEMBER/VIEWER and foreign-household denials remain effective. Use the existing local app and direct requests, record observed results, and run relevant lint/typecheck/build checks; no automated tests are added or run.
 - **Risks and decisions:** Compare parsed origins rather than trusting the request Host or proxy headers; allow a JSON media type with a charset parameter. Browser and proxy behavior must be checked with the configured local web origin. No new product decision is required.
 
+## Implementation checklist
+
+- [x] `apps/api/src/app/api/v1/households/[householdId]/route.ts` provides detail GET and name PATCH with current membership and OWNER-only mutation.
+- [x] The route rejects invalid names and currency changes and retains the established no-store/error behavior.
+- [x] `apps/web/src/app/households-panel.tsx` supports household selection and OWNER rename while preserving the selected household context.
+
 ## Acceptance criteria
 
 - [x] A current member can view the selected household's name, default currency and their role; an unrelated account cannot retrieve it by ID.
 - [x] Only OWNER can update the name; MEMBER and VIEWER direct API requests, invalid input and attempts to change the currency leave the record unchanged.
 - [x] A user belonging to two households can update one without changing the other, and the web reflects the saved value after reload. The API's second-household state was manually confirmed unchanged; a later independent browser pass confirmed the renamed value persists after reload.
 
-## Verification
+## Verification checklist
 
 - **CSRF hardening follow-up implementation — 2026-10-26:** Added a shared `WEB_ORIGIN` + JSON media-type guard to authenticated OWNER PATCH requests. Missing/malformed/mismatched Origin, absent/non-JSON Content-Type, or missing/invalid `WEB_ORIGIN` are rejected before the household update. API ESLint and `tsc --noEmit` passed after the T05 Prisma client was regenerated. A subsequent independent manual round checked runtime requests; no automated tests were added or run.
 - **Independent manual verification — 2026-10-26 (reported by the checking agent):** The OWNER renamed the household in the browser and the saved name remained after page reload. Direct requests confirmed the 401/200/403/404 session, role and household-ID matrix. Invalid Origin and Content-Type requests were rejected without an update. Invalid name and currency submissions remained rejected without changing the record; the second household remained unchanged. The temporary second-household and role fixtures were cleaned up; the synthetic test account and primary synthetic household were retained. This record reports that agent's results rather than a second run by the product-owner agent.

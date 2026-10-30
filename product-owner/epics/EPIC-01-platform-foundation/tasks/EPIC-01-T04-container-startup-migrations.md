@@ -1,6 +1,6 @@
 # EPIC-01-T04: Make container startup migration-safe
 
-## Goal and value
+## Goal and user value
 
 Make `docker compose up --build -d` usable with a fresh PostgreSQL volume by ensuring the API schema exists before the API reports ready.
 
@@ -8,19 +8,25 @@ Make `docker compose up --build -d` usable with a fresh PostgreSQL volume by ens
 
 Define and implement a repeatable migration step for the Compose startup path, then document the resulting container workflow. Keep deployment infrastructure beyond local Compose outside this task.
 
+## Implementation checklist
+
+- [x] `Dockerfile` builds the API with Prisma Client generated from temporary build configuration, without requiring runtime credentials or a database connection.
+- [x] API container startup runs `prisma migrate deploy` before starting the server and exits visibly on migration failure; Compose health checks depend on API readiness.
+- [x] `docker-compose.yml` keeps PostgreSQL, API and web as separate services with readiness ordering, while `README.md` documents repeatable startup and migration diagnostics.
+
 ## Acceptance criteria
 
 - [x] With a fresh local Compose database volume and valid local environment configuration, the startup path applies committed migrations before the API is considered ready.
 - [x] Repeating startup is safe when migrations are already applied; a migration failure is visible and does not leave the API falsely healthy.
 - [x] Web and API remain separate services, and no credential values are written into tracked files or startup logs.
 
-## Verification
+## Verification checklist
 
 - [x] Build and start the Compose stack against an isolated fresh local volume; record service and health status.
 - [x] Verify the migration state and a web-to-API status request, then repeat startup to check idempotence.
 - [x] Confirm failure behavior using a safe local test condition, without touching production or household data.
 
-## Verification record (2026-10-25)
+## Current status and evidence — verification record, 2026-10-25
 
 Temporary test configuration under `/tmp/family-finance-t04-check/` supplied synthetic credentials, removed host port mappings, and tagged local test images. The projects `family_finance_t04_check` and `family_finance_t04_failure` used separate newly created PostgreSQL volumes.
 

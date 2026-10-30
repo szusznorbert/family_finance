@@ -4,12 +4,16 @@
 
 Deliver a complete authenticated household flow: a person can sign in, create and choose a household, invite another person, and use only the households and operations their membership permits. The API remains the authority for identity, membership and role checks. The eight tasks below are planning proposals; no application behavior is implemented by this plan.
 
-## Current evidence — 2026-10-26
+## Current evidence — 2026-10-28
+
+This summary reflects the dated implementation and verification records in the task files; it does not independently mark acceptance complete. T01 and T03 have all recorded acceptance and verification items checked. T02 has successful household creation/list/selection, role, currency, category, isolation and invalid-input evidence, but its acceptance items remain unchecked and forced transaction rollback was not manually exercised. T04's acceptance and verification items are checked with synthetic role, isolation, CSRF, validation and reload evidence. T05's runtime/browser verification is partial: invitation roles, expiry, token handling, replacement/revocation and basic copy flow are recorded; concurrent issue/replace, household-switch state clearing, log inspection and the forwarding warning remain open. T06 records successful, replay, revoked, existing-member and concurrent redemption checks; the expired-link case, server-log inspection and production build remain open. T07 has implementation/static evidence and a limited read-only UI/API pass; mutation, last-OWNER, audit and concurrency verification remain open. T08's form structure and hydrated auth flow are checked, while direct no-JavaScript network/history/log verification remains open. No EPIC-02 work archive or active work/current-task record was present during this documentation review.
+
+## Historical evidence snapshot — 2026-10-26
 
 - T01 provides Better Auth email/password, web registration/sign-in and session access; the web proxies `/api/auth/*` and `/api/v1/*` to the separate API.
 - T02 PR #10 and its corrective PR #11 are merged. The Prisma `HouseholdRole` enum now contains OWNER, MEMBER and VIEWER; the earlier ADMIN value was removed through a follow-on migration that preserved existing household data.
 - `GET /api/v1/households` reads the authenticated user's memberships and returns only those households. `POST /api/v1/households` requires a session and atomically creates a RON household, the creator's OWNER membership and nine default categories. `GET /api/v1/me` is account-level.
-- There is no ID-scoped household business route or reusable household policy helper yet. The browser's selected household ID is a local preference, not authorization.
+- At this snapshot, there was no ID-scoped household business route or reusable household policy helper yet. The browser's selected household ID was a local preference, not authorization.
 - The accepted three-role model supersedes the attached technical specification's four-role suggestion.
 
 ## Task order and dependencies

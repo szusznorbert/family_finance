@@ -1,6 +1,6 @@
 # EPIC-01-T01: Verify a fresh local checkout
 
-## Goal and value
+## Goal and user value
 
 Make the documented developer setup reproducible from a fresh checkout, so a new contributor can start the database, API, and web app without hidden manual steps.
 
@@ -8,13 +8,19 @@ Make the documented developer setup reproducible from a fresh checkout, so a new
 
 Verify and, where needed, correct the existing Node/pnpm setup, environment initialization, `scripts/dev.sh`, Prisma generation/migration flow, and local setup documentation.
 
+## Implementation checklist
+
+- [x] `scripts/dev.sh` checks Node.js, pnpm and Python prerequisites before changing local state and reports unsupported versions clearly.
+- [x] Local `.env` initialization uses `.env.example`, generates starter secrets without tracking them, and starts PostgreSQL before Prisma generation/migration.
+- [x] `README.md` documents prerequisites, install/start commands, service ports and the local migration flow.
+
 ## Acceptance criteria
 
 - [x] From a fresh checkout with the documented prerequisites, dependency installation and `./scripts/dev.sh` bring up PostgreSQL, API, and web using the documented commands.
 - [x] The web page and API respond, and the web's same-origin backend status check reaches the API successfully.
 - [x] Local secrets are generated or supplied through ignored environment configuration; neither commands nor documentation require committing secret values. Setup failures identify the missing prerequisite or failed step.
 
-## Verification
+## Verification checklist
 
 - [x] Record the Node, pnpm, and Docker prerequisites used and the install/start commands actually run.
 - [x] Confirm local responses on ports 3000 and 3001 and the `/api/backend` proxy path.
@@ -32,7 +38,7 @@ None. This establishes the baseline for the remaining EPIC-01 work.
 
 Medium. Verification may reveal a focused setup fix.
 
-## Verification record — 2026-10-25
+## Current status and evidence — verification record, 2026-10-25
 
 - A fresh export of tracked repository files, with the updated startup script and no existing `node_modules` or `.env`, installed successfully using Node.js 24.22.1 and `pnpm install --frozen-lockfile` (pnpm 11.25.0). Docker Engine 28.4.0, Compose 2.39.2, and Python 3 were available. The offline install was blocked by a missing cached tarball; the normal lockfile install succeeded.
 - A synthetic `.env` was supplied only in that temporary checkout. To preserve the existing project database, the test Compose file changed only PostgreSQL's host port from 5432 to 55432. The documented `./scripts/dev.sh` itself ran unchanged, generated the Prisma Client, applied `20261025113740_init`, and started the API and web on their default 3001/3000 ports.

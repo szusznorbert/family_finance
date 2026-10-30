@@ -1,0 +1,94 @@
+.index {
+  max-width: 760px;
+}
+
+.groups {
+  display: grid;
+  gap: 22px;
+}
+
+.groupTitle {
+  margin: 0 0 8px 12px;
+  color: var(--label-secondary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.groupList {
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--separator) 75%, transparent);
+  border-radius: 16px;
+  background: var(--surface);
+  list-style: none;
+}
+
+.groupList li + li {
+  border-top: 1px solid var(--separator);
+}
+
+.settingsLink {
+  display: flex;
+  min-height: 58px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  color: var(--label-primary);
+  font-size: 16px;
+  font-weight: 550;
+  text-decoration: none;
+}
+
+.settingsLink:hover {
+  background: color-mix(in srgb, var(--tint) 5%, var(--surface));
+}
+
+.settingsLink:focus-visible {
+  position: relative;
+  z-index: 1;
+}
+
+.disclosure {
+  flex: 0 0 auto;
+  color: var(--label-secondary);
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.detail {
+  max-width: 860px;
+}
+
+.backLink {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 14px;
+  color: var(--tint);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.backLink:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.accountCard {
+  margin-top: 0;
+}
+
+@media (max-width: 520px) {
+  .groups {
+    gap: 18px;
+  }
+
+  .settingsLink {
+    min-height: 60px;
+    padding-inline: 14px;
+  }
+}

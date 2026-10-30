@@ -17,14 +17,43 @@ Resolve the privately forwarded bearer link in the web, require sign-in under op
 - **Manual verification:** After T05's migration is applied and its API is available in the local development app, use synthetic accounts and households to check a newly registered and an existing signed-in account, including an account whose e-mail differs from the informational label. Verify success adds the correct role and household to selection; replay, malformed, expired, revoked and consumed tokens add no membership; an existing member gets 409 with membership/role unchanged and the invitation still pending; concurrent requests yield at most one success; no session gets 401; and unrelated household access remains denied. In the browser, verify signed-out link holders can sign in/register and return to acceptance, the token does not appear in API logs/errors, and safe success/failure messages render. Run lint/typecheck/build as quality checks; do not add or run automated tests for this MVP task.
 - **Dependencies, risks and open decisions:** T05 must be integrated and manually verified first; its invitation migration must be applied locally before exercising redemption. No product decision remains open: the user approved 2026-10-26 that an existing member receives 409, keeps the existing role, and leaves the invitation pending. Main risks are transaction races, leaking a bearer token through URL/history/logging, unsafe post-auth redirects, and accidentally trusting client-provided role or household identifiers. Runtime verification is currently blocked until the machine provides the Node.js 24.22.1 version in `.nvmrc` and the local API/database are available; T05 explicitly records that its migration and runtime checks remain pending.
 
+## Implementation checklist
+
+- [x] `apps/api/src/app/api/v1/invitations/accept/route.ts` validates the stored token verifier and atomically claims a pending, unexpired invitation.
+- [x] Acceptance transaction creates only MEMBER/VIEWER membership and handles replay, existing membership and concurrent redemption.
+- [x] `apps/web/src/app/invitations/accept/invitation-acceptance.tsx` keeps the secret in the URL fragment until client-side handling/scrubbing on the invitation-specific route.
+
 ## Acceptance criteria
 
-- [x] A signed-in holder of a valid, unrevoked, seven-day pending link can accept it exactly once and appears in that household as MEMBER or VIEWER, even if the account's e-mail differs from the informational e-mail entered by the OWNER. An invitation never grants OWNER.
-- [ ] Invalid, expired, revoked and reused links create no membership and show a safe, useful outcome; the token is checked against its stored hash/verifier without exposing the secret in logs or error responses.
-- [x] Simultaneous acceptance attempts create at most one membership and one accepted invitation state. Acceptance by an account already belonging to that household returns 409, changes neither its membership nor role, and leaves the invitation pending for another valid link holder until successful redemption, expiry or revocation.
-- [ ] After acceptance, the new member can select the household; access to any other household remains governed by its separate membership.
+- [x] A signed-in account can accept a currently valid, unrevoked invitation that is within its seven-day validity window.
+- [x] Successful acceptance grants only the MEMBER or VIEWER role stored on the invitation; it never grants OWNER.
+- [x] The accepting account's e-mail may differ from the informational e-mail entered by the OWNER.
+- [x] Successful acceptance creates membership in the invited household.
+- [x] The new member can select the household, and that selection persists after reload.
+- [x] An invitation can be accepted only once; replay cannot create another membership.
+- [ ] An invalid or malformed token creates no membership and produces a safe, useful outcome.
+- [ ] An expired token creates no membership and produces a safe, useful outcome.
+- [x] A revoked token creates no membership and produces a safe, useful outcome.
+- [x] A reused token creates no additional membership and produces a safe, useful outcome.
+- [x] Token lookup uses the stored hash/verifier rather than exposing or persisting the secret.
+- [ ] The token is not exposed in logs or error responses.
+- [x] Simultaneous acceptance attempts create at most one membership and one accepted invitation state.
+- [x] Acceptance by an account already in the household returns 409.
+- [x] The 409 response changes neither the existing membership nor its role.
+- [x] After a 409, the invitation remains pending and another valid link holder can accept it.
+- [ ] A pending invitation remains redeemable after the 409 until successfully redeemed, expired, or revoked.
+- [ ] After acceptance, access to any other household remains governed by that household's separate membership.
 
-## Verification
+### Acceptance criteria decomposition note — 2026-10-28
+
+Old criterion 1 was split into criteria 1–4 and 6; old criterion 2 was split into criteria 7–12; old criterion 3 was split into criteria 13–17; and old criterion 4 was split into criteria 5 and 18. All resulting atomic acceptance items were initially unchecked for Tester reconciliation; the evidence mapping below records later supported items. The former checked state of old criteria 1 and 3 is retained here as history only; no atomic item is marked complete. Existing implementation evidence and verification records are unchanged.
+
+### Evidence reconciliation — 2026-10-28
+
+- Checked 1–6, 9–11 and 13–16 from the 2026-10-26 synthetic MEMBER/VIEWER acceptance, different e-mail, persisted selection, replay/revocation, hash-only token handling, concurrent [201, 410] outcome and existing-member 409 followed by another holder's success. This is a mapping of recorded evidence, not a rerun.
+- Left 7 open because the unknown valid-shaped token was tested but malformed input was not recorded; 8 because expiry was not exercised; 12 because server logs were not inspected; 17 because the post-409 expiry/revocation limits were not exercised; and 18 because separate foreign-household access after acceptance was not directly checked.
+
+## Verification checklist
 
 - [x] Test acceptance by newly registered accounts whose e-mail differs from the informational address; MEMBER and VIEWER membership and role appeared in the selectable household list and persisted after a reload.
 - [x] Test token replay, revocation, concurrent acceptance and an existing member's 409 outcome in the local synthetic database; confirm only one successful redemption, no role escalation and an unchanged pending link after the 409. API/web typecheck and targeted lint passed.

@@ -1,0 +1,306 @@
+.page {
+  width: min(100%, 620px);
+  padding-bottom: calc(112px + env(safe-area-inset-bottom));
+}
+
+.back {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 13px;
+  color: var(--tint);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.back span {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.heading {
+  margin-bottom: 24px;
+}
+
+.heading h1 {
+  margin: 0;
+  color: var(--label-primary);
+  font-size: clamp(32px, 8vw, 40px);
+  font-weight: 700;
+  letter-spacing: -0.045em;
+  line-height: 1.1;
+}
+
+.heading p {
+  margin: 8px 0 0;
+  color: var(--label-secondary);
+  font-size: 15px;
+}
+
+.householdContext {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding: 10px 14px;
+  border: 1px solid var(--separator);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.householdContext label {
+  color: var(--label-secondary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.householdContext span {
+  min-width: 0;
+  color: var(--label-primary);
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+
+.householdContext select {
+  width: min(68%, 320px);
+  min-width: 0;
+  min-height: 44px;
+  padding: 7px 10px;
+  border: 1px solid var(--field-border);
+  border-radius: 10px;
+  background: var(--field-fill);
+  color: var(--label-primary);
+  font-size: 15px;
+}
+
+.form {
+  display: grid;
+  gap: 25px;
+}
+
+.typeSelector {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.typeSelector legend,
+.amountField label,
+.field label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--label-primary);
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.typeOptions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 3px;
+  padding: 4px;
+  border: 1px solid var(--separator);
+  border-radius: 13px;
+  background: var(--surface-secondary);
+}
+
+.typeOption {
+  min-width: 0;
+  cursor: pointer;
+}
+
+.typeOption input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.typeOption span {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 8px;
+  border-radius: 10px;
+  color: var(--label-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.typeOption input:checked + span {
+  background: var(--surface);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 12%);
+  color: var(--label-primary);
+}
+
+.typeOption input:focus-visible + span {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.amountControl {
+  display: flex;
+  min-height: 80px;
+  align-items: baseline;
+  gap: 10px;
+  padding: 11px 17px;
+  border: 1px solid var(--field-border);
+  border-radius: 17px;
+  background: var(--surface);
+}
+
+.amountControl:focus-within {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.amountControl input {
+  width: 100%;
+  min-width: 0;
+  min-height: 54px;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--label-primary);
+  font-size: clamp(30px, 9vw, 40px);
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+  letter-spacing: -0.045em;
+}
+
+.amountControl input::placeholder {
+  color: var(--label-secondary);
+  opacity: 0.55;
+}
+
+.amountControl span {
+  flex: 0 0 auto;
+  align-self: center;
+  color: var(--label-secondary);
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.fields {
+  display: grid;
+  gap: 20px;
+}
+
+.field label span {
+  color: var(--label-secondary);
+  font-weight: 400;
+}
+
+.field input,
+.field select,
+.field textarea {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  padding: 11px 13px;
+  border: 1px solid var(--field-border);
+  border-radius: var(--control-radius);
+  background: var(--field-fill);
+  color: var(--label-primary);
+  font-size: 16px;
+}
+
+.field textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.field > p {
+  margin: 7px 0 0;
+  color: var(--label-secondary);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.field .fieldError {
+  color: var(--danger);
+}
+
+.submit {
+  width: 100%;
+  min-height: 52px;
+  padding: 12px 18px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--tint);
+  color: var(--tint-foreground);
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 650;
+}
+
+.submit:disabled {
+  cursor: wait;
+  opacity: 0.58;
+}
+
+.feedback,
+.formError,
+.saved {
+  padding: 13px 15px;
+  border: 1px solid var(--separator);
+  border-radius: 13px;
+  background: var(--surface);
+  color: var(--label-primary);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.feedback p,
+.saved p {
+  margin: 0 0 10px;
+}
+
+.feedback a,
+.saved a {
+  color: var(--tint);
+  font-weight: 600;
+}
+
+.feedback button,
+.saved button {
+  min-height: 44px;
+  margin-right: 14px;
+  padding: 7px 12px;
+  border: 1px solid var(--field-border);
+  border-radius: 10px;
+  background: var(--field-fill);
+  color: var(--label-primary);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.formError {
+  margin: 0;
+  border-color: color-mix(in srgb, var(--danger) 35%, var(--separator));
+  background: color-mix(in srgb, var(--danger) 8%, var(--surface));
+  color: var(--danger);
+}
+
+.saved {
+  border-color: color-mix(in srgb, var(--success) 30%, var(--separator));
+}
+
+@media (max-width: 359px) {
+  .typeOption span {
+    padding-inline: 3px;
+    font-size: 13px;
+  }
+}

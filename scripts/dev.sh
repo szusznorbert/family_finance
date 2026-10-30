@@ -34,6 +34,14 @@ if ! docker info >/dev/null 2>&1; then
   echo "Hiba: A Docker daemon nem érhető el. Indítsd el a Docker Desktopot, és ellenőrizd a Docker-hozzáférést." >&2
   exit 1
 fi
+if ! command -v lsof >/dev/null 2>&1; then
+  echo "Hiba: lsof szükséges a 3000-es webport ellenőrzéséhez." >&2
+  exit 1
+fi
+if lsof -nP -iTCP:3000 -sTCP:LISTEN -t >/dev/null 2>&1; then
+  echo "Hiba: A 3000-es port már foglalt. Állítsd le a meglévő webszervert, majd próbáld újra; a WEB_ORIGIN-nek a web pontos portjával kell egyeznie." >&2
+  exit 1
+fi
 
 if [[ ! -f .env ]]; then
   cp .env.example .env
@@ -80,19 +88,8 @@ if password_match and database_url_match and "change-this-local-password" in dat
 env_path.write_text(content)
 PY
 
-echo "PostgreSQL indítása..."
-docker compose up -d postgres
+echo "PostgreSQL és API indítása a privát dokumentumkötettel..."
+docker compose up --build -d --wait api
 
-echo "Várok az adatbázisra..."
-until docker compose exec -T postgres pg_isready -U "$(sed -n 's/^POSTGRES_USER=//p' .env | head -n 1)" >/dev/null 2>&1; do
-  sleep 2
-done
-
-echo "Prisma kliens generálása..."
-pnpm --filter api prisma:generate
-
-echo "Adatbázis migrációk alkalmazása..."
-pnpm --filter api exec prisma migrate dev --name init
-
-echo "Indítom a webalkalmazást és az API-t. Leállításhoz nyomj Ctrl+C-t."
-pnpm dev
+echo "Indítom a webalkalmazást. Leállításhoz nyomj Ctrl+C-t; az API konténer futva marad."
+pnpm --filter web dev
