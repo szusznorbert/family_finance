@@ -1,6 +1,6 @@
 # EPIC-01-T03: Complete workspace quality checks
 
-## Goal and value
+## Goal and user value
 
 Give contributors trustworthy root commands for linting, typechecking, and building every code workspace affected by platform changes.
 
@@ -8,18 +8,24 @@ Give contributors trustworthy root commands for linting, typechecking, and build
 
 Review the current root and package scripts and add only the missing configuration needed for web, API, and shared TypeScript sources to participate in the relevant checks.
 
+## Implementation checklist
+
+- [x] Root scripts in `package.json` run lint, typecheck and build for the documented web, API and shared source coverage.
+- [x] Workspace package scripts/configuration provide the app-level ESLint and TypeScript checks; generated Prisma and Next.js output are excluded from lint coverage as documented.
+- [x] `README.md` records each root command's package coverage and the shared package's source-only build behavior.
+
 ## Acceptance criteria
 
 - [x] Root lint/typecheck/build commands cover the applicable web, API, and shared source files, with skipped packages documented rather than silently treated as checked.
 - [x] The checks pass on the baseline code or produce actionable failures that are resolved within this task's platform scope.
 - [x] `README.md` documents the exact commands and what each command covers.
 
-## Verification
+## Verification checklist
 
 - [x] Run and record `pnpm lint`, `pnpm typecheck`, and `pnpm build` from the repository root.
 - [x] Report package coverage for each command and any known check that remains outside the baseline.
 
-## Verification record (2026-10-25)
+## Current status and evidence — verification record, 2026-10-25
 
 - `pnpm lint`: passed for web, API, and shared source.
 - `pnpm typecheck`: passed separately for shared, API, and web.

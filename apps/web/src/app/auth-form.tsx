@@ -4,10 +4,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useSyncExternalStore, type FormEvent } from "react";
 import { authClient } from "@/lib/auth-client";
+import AppShell from "./app-shell";
 
 const subscribeToHydration = () => () => {};
 const getHydrationSnapshot = () => true;
 const getServerHydrationSnapshot = () => false;
+const mismatchMessage = "A két jelszó nem egyezik.";
 
 export default function AuthForm({ mode }: { mode: "login" | "register" }) {
   const router = useRouter();
@@ -19,6 +21,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
   );
   const [error, setError] = useState<string | null>(null);
   const registering = mode === "register";
+  const passwordMismatch = registering && error === mismatchMessage;
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -30,7 +33,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
     const confirmPassword = String(form.get("confirmPassword") ?? "");
 
     if (registering && password !== confirmPassword) {
-      setError("A két jelszó nem egyezik.");
+      setError(mismatchMessage);
       return;
     }
 
@@ -54,7 +57,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
         return;
       }
 
-      router.replace("/");
+      router.replace(registering ? "/kezdes" : "/");
       router.refresh();
     } catch {
       setError("A szolgáltatás jelenleg nem érhető el. Próbáld újra később.");
@@ -64,62 +67,135 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-50 px-6 py-16 text-slate-900">
-      <section className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-        <Link className="text-sm font-semibold text-emerald-700" href="/">
-          Household Finance
-        </Link>
-        <h1 className="mt-4 text-3xl font-semibold">
-          {registering ? "Fiók létrehozása" : "Bejelentkezés"}
-        </h1>
-        <p className="mt-2 text-sm text-slate-600">
-          {registering
-            ? "Hozz létre egy fiókot. A háztartásaidat a következő lépésben állíthatod be."
-            : "Lépj be a fiókodba a háztartásaid eléréséhez."}
-        </p>
-        <form
-          action={registering ? "/regisztracio" : "/bejelentkezes"}
-          className="mt-7 space-y-4"
-          method="post"
-          onSubmit={submit}
+    <AppShell>
+      <main className="mx-auto flex min-h-[calc(100svh-72px)] w-full max-w-screen-sm flex-1 items-center px-4 py-6 sm:px-6 sm:py-10">
+        <section
+          aria-labelledby="auth-title"
+          className="w-full rounded-[20px] border p-5 shadow-sm sm:p-8"
+          style={{
+            backgroundColor: "var(--surface)",
+            borderColor: "var(--separator)",
+            color: "var(--label-primary)",
+          }}
         >
-          {registering && (
+          <h1 className="text-3xl font-bold tracking-tight" id="auth-title">
+            {registering ? "Fiók létrehozása" : "Bejelentkezés"}
+          </h1>
+          <p className="mt-2 text-sm leading-6" style={{ color: "var(--label-secondary)" }}>
+            {registering
+              ? "Hozz létre egy fiókot. A háztartásaidat a következő lépésben állíthatod be."
+              : "Lépj be a fiókodba a háztartásaid eléréséhez."}
+          </p>
+          <form
+            action={registering ? "/regisztracio" : "/bejelentkezes"}
+            className="mt-7 space-y-5"
+            method="post"
+            onSubmit={submit}
+          >
+            {registering && (
+              <div>
+                <label className="mb-1.5 block text-sm font-semibold" htmlFor="name">Név</label>
+                <input
+                  autoComplete="name"
+                  className="min-h-12 w-full rounded-xl border px-3 py-2.5 text-base"
+                  id="name"
+                  maxLength={100}
+                  name="name"
+                  required
+                  type="text"
+                />
+              </div>
+            )}
             <div>
-              <label className="block text-sm font-medium" htmlFor="name">Név</label>
-              <input autoComplete="name" className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-emerald-600 focus:outline-none" id="name" maxLength={100} name="name" required type="text" />
+              <label className="mb-1.5 block text-sm font-semibold" htmlFor="email">E-mail-cím</label>
+              <input
+                autoComplete="email"
+                className="min-h-12 w-full rounded-xl border px-3 py-2.5 text-base"
+                id="email"
+                name="email"
+                required
+                type="email"
+              />
             </div>
-          )}
-          <div>
-            <label className="block text-sm font-medium" htmlFor="email">E-mail-cím</label>
-            <input autoComplete="email" className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-emerald-600 focus:outline-none" id="email" name="email" required type="email" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium" htmlFor="password">Jelszó</label>
-            <input autoComplete={registering ? "new-password" : "current-password"} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-emerald-600 focus:outline-none" id="password" minLength={8} name="password" required type="password" />
-          </div>
-          {registering && (
             <div>
-              <label className="block text-sm font-medium" htmlFor="confirmPassword">Jelszó megerősítése</label>
-              <input autoComplete="new-password" className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-emerald-600 focus:outline-none" id="confirmPassword" minLength={8} name="confirmPassword" required type="password" />
+              <label className="mb-1.5 block text-sm font-semibold" htmlFor="password">Jelszó</label>
+              <input
+                aria-describedby={passwordMismatch ? "auth-error" : undefined}
+                aria-invalid={passwordMismatch || undefined}
+                autoComplete={registering ? "new-password" : "current-password"}
+                className="min-h-12 w-full rounded-xl border px-3 py-2.5 text-base"
+                id="password"
+                minLength={8}
+                name="password"
+                required
+                type="password"
+              />
             </div>
-          )}
-          {error && <p aria-live="polite" className="rounded-lg bg-rose-50 p-3 text-sm text-rose-800" role="alert">{error}</p>}
-          <noscript>
-            <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900" role="alert">
-              JavaScript nélkül az űrlap nem küldhető el. Kapcsold be a JavaScriptet a folytatáshoz.
-            </p>
-          </noscript>
-          <button className="w-full rounded-lg bg-emerald-700 px-4 py-2.5 font-medium text-white transition hover:bg-emerald-800 disabled:cursor-wait disabled:opacity-60" disabled={!hydrated || pending} type="submit">
-            {pending ? "Kis türelmet…" : registering ? "Regisztráció" : "Bejelentkezés"}
-          </button>
-        </form>
-        <p className="mt-6 text-sm text-slate-600">
-          {registering ? "Már van fiókod? " : "Még nincs fiókod? "}
-          <Link className="font-medium text-emerald-700 underline-offset-2 hover:underline" href={registering ? "/bejelentkezes" : "/regisztracio"}>
-            {registering ? "Jelentkezz be" : "Regisztrálj"}
-          </Link>
-        </p>
-      </section>
-    </main>
+            {registering && (
+              <div>
+                <label className="mb-1.5 block text-sm font-semibold" htmlFor="confirmPassword">
+                  Jelszó megerősítése
+                </label>
+                <input
+                  aria-describedby={passwordMismatch ? "auth-error" : undefined}
+                  aria-invalid={passwordMismatch || undefined}
+                  autoComplete="new-password"
+                  className="min-h-12 w-full rounded-xl border px-3 py-2.5 text-base"
+                  id="confirmPassword"
+                  minLength={8}
+                  name="confirmPassword"
+                  required
+                  type="password"
+                />
+              </div>
+            )}
+            {error && (
+              <p
+                aria-live="assertive"
+                className="rounded-xl p-3 text-sm leading-5"
+                id="auth-error"
+                role="alert"
+                style={{
+                  backgroundColor: "color-mix(in srgb, var(--danger) 10%, var(--surface))",
+                  color: "var(--danger)",
+                }}
+              >
+                {error}
+              </p>
+            )}
+            <noscript>
+              <p
+                className="rounded-xl p-3 text-sm leading-5"
+                role="alert"
+                style={{
+                  backgroundColor: "color-mix(in srgb, var(--warning) 12%, var(--surface))",
+                  color: "var(--label-primary)",
+                }}
+              >
+                JavaScript nélkül az űrlap nem küldhető el. Kapcsold be a JavaScriptet a folytatáshoz.
+              </p>
+            </noscript>
+            <button
+              className="min-h-12 w-full rounded-xl px-4 py-3 text-base font-semibold transition disabled:cursor-wait disabled:opacity-60"
+              disabled={!hydrated || pending}
+              style={{ backgroundColor: "var(--tint)", color: "var(--tint-foreground)" }}
+              type="submit"
+            >
+              {pending ? "Kis türelmet…" : registering ? "Regisztráció" : "Bejelentkezés"}
+            </button>
+          </form>
+          <p className="mt-6 text-sm leading-6" style={{ color: "var(--label-secondary)" }}>
+            {registering ? "Már van fiókod? " : "Még nincs fiókod? "}
+            <Link
+              className="font-semibold underline decoration-1 underline-offset-4"
+              href={registering ? "/bejelentkezes" : "/regisztracio"}
+              style={{ color: "var(--tint)" }}
+            >
+              {registering ? "Jelentkezz be" : "Regisztrálj"}
+            </Link>
+          </p>
+        </section>
+      </main>
+    </AppShell>
   );
 }

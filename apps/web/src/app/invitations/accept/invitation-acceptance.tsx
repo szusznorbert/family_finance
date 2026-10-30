@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, useSyncExternalStore, type FormEvent } from "react";
 import { authClient } from "@/lib/auth-client";
+import AppShell from "../../app-shell";
 
 type AcceptedHousehold = {
   id: string;
@@ -225,48 +226,82 @@ export default function InvitationAcceptance() {
   }
 
   const registering = mode === "register";
+  const passwordMismatch = registering && error === "A két jelszó nem egyezik.";
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-50 px-6 py-12 text-slate-900">
-      <section className="w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-        <Link className="text-sm font-semibold text-emerald-700" href="/">
-          Household Finance
-        </Link>
-        <h1 className="mt-4 text-3xl font-semibold tracking-tight">Háztartási meghívó</h1>
-        <p className="mt-2 text-sm leading-6 text-slate-600">
+    <AppShell>
+      <main className="mx-auto flex min-h-[calc(100svh-72px)] w-full max-w-screen-md flex-1 items-center px-4 py-6 sm:px-6 sm:py-10">
+      <section
+        aria-labelledby="invitation-title"
+        className="w-full rounded-[20px] border p-5 shadow-sm sm:p-8"
+        style={{ backgroundColor: "var(--surface)", borderColor: "var(--separator)", color: "var(--label-primary)" }}
+      >
+        <h1 className="text-3xl font-bold tracking-tight" id="invitation-title">Háztartási meghívó</h1>
+        <p className="mt-2 text-sm leading-6" style={{ color: "var(--label-secondary)" }}>
           A meghívólink birtokosa csatlakozhat a háztartáshoz. A tulajdonos által megadott e-mail-cím tájékoztató jellegű, a bejelentkezett fiók címe eltérhet.
         </p>
 
         {!hydrated ? (
-          <p className="mt-6 text-sm text-slate-600" role="status">A meghívólink ellenőrzése…</p>
+          <p className="mt-6 text-sm" role="status" style={{ color: "var(--label-secondary)" }}>A meghívólink ellenőrzése…</p>
         ) : acceptedHousehold ? (
-          <div className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-            <p className="font-semibold text-emerald-950">{notice}</p>
-            <p className="mt-2 text-sm text-emerald-900">
+          <div
+            aria-live="polite"
+            className="mt-6 rounded-2xl border p-4 sm:p-5"
+            role="status"
+            style={{
+              backgroundColor: "color-mix(in srgb, var(--success) 12%, var(--surface))",
+              borderColor: "color-mix(in srgb, var(--success) 35%, var(--separator))",
+            }}
+          >
+            <p className="font-semibold">{notice}</p>
+            <p className="mt-2 text-sm" style={{ color: "var(--label-secondary)" }}>
               {acceptedHousehold.name} · {acceptedHousehold.currency} · {acceptedHousehold.role === "VIEWER" ? "Megtekintő" : "Tag"}
             </p>
-            <Link className="mt-4 inline-flex rounded-lg bg-emerald-800 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-900" href="/">
+            <Link
+              className="mt-4 inline-flex min-h-12 items-center justify-center rounded-xl px-4 py-3 text-sm font-semibold"
+              href="/"
+              style={{ backgroundColor: "var(--tint)", color: "var(--tint-foreground)" }}
+            >
               Háztartás kiválasztása
             </Link>
           </div>
         ) : !inviteToken ? (
-          <p className="mt-6 rounded-lg bg-amber-50 p-4 text-sm text-amber-900" role="alert">
+          <p
+            className="mt-6 rounded-xl p-4 text-sm leading-6"
+            role="alert"
+            style={{ backgroundColor: "color-mix(in srgb, var(--warning) 12%, var(--surface))", color: "var(--label-primary)" }}
+          >
             A meghívólink hiányzik vagy hibás. Kérj a tulajdonostól egy új linket.
           </p>
         ) : sessionPending ? (
-          <p className="mt-6 text-sm text-slate-600" role="status">Munkamenet ellenőrzése…</p>
+          <p className="mt-6 text-sm" role="status" style={{ color: "var(--label-secondary)" }}>Munkamenet ellenőrzése…</p>
         ) : sessionError ? (
-          <p className="mt-6 rounded-lg bg-rose-50 p-4 text-sm text-rose-800" role="alert">A munkamenet most nem ellenőrizhető. Frissítsd az oldalt, és próbáld újra.</p>
+          <p
+            className="mt-6 rounded-xl p-4 text-sm leading-6"
+            role="alert"
+            style={{ backgroundColor: "color-mix(in srgb, var(--danger) 10%, var(--surface))", color: "var(--danger)" }}
+          >
+            A munkamenet most nem ellenőrizhető. Frissítsd az oldalt, és próbáld újra.
+          </p>
         ) : session?.user ? (
           <div className="mt-6">
-            <p className="text-sm text-slate-700">Bejelentkezve: <strong>{session.user.name}</strong> ({session.user.email})</p>
+            <p className="break-words text-sm" style={{ color: "var(--label-secondary)" }}>
+              Bejelentkezve: <strong style={{ color: "var(--label-primary)" }}>{session.user.name}</strong> ({session.user.email})
+            </p>
             {alreadyMember ? (
-              <div className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-4">
-                <p className="text-sm text-amber-950">Ez a meghívó nem változtatja meg a meglévő tagságodat, és függőben marad egy másik linkbirtokos számára.</p>
+              <div
+                className="mt-4 rounded-2xl border p-4 sm:p-5"
+                style={{
+                  backgroundColor: "color-mix(in srgb, var(--warning) 12%, var(--surface))",
+                  borderColor: "color-mix(in srgb, var(--warning) 35%, var(--separator))",
+                }}
+              >
+                <p className="text-sm leading-6">Ez a meghívó nem változtatja meg a meglévő tagságodat, és függőben marad egy másik linkbirtokos számára.</p>
                 <button
-                  className="mt-3 rounded-lg border border-amber-700 px-4 py-2 text-sm font-semibold text-amber-950 hover:bg-amber-100 disabled:cursor-wait disabled:opacity-60"
+                  className="mt-3 min-h-12 w-full rounded-xl border px-4 py-3 text-sm font-semibold sm:w-auto disabled:cursor-wait disabled:opacity-60"
                   disabled={signingOut}
                   onClick={() => void signOutToUseAnotherAccount()}
+                  style={{ borderColor: "var(--warning)", color: "var(--label-primary)" }}
                   type="button"
                 >
                   {signingOut ? "Kijelentkezés…" : "Kijelentkezés másik fiók használatához"}
@@ -274,9 +309,10 @@ export default function InvitationAcceptance() {
               </div>
             ) : (
               <button
-                className="mt-4 rounded-lg bg-emerald-800 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-800 disabled:cursor-wait disabled:opacity-60"
+                className="mt-4 min-h-12 w-full rounded-xl px-4 py-3 text-sm font-semibold sm:w-auto disabled:cursor-wait disabled:opacity-60"
                 disabled={accepting}
                 onClick={() => void acceptInvitation()}
+                style={{ backgroundColor: "var(--tint)", color: "var(--label-primary)" }}
                 type="button"
               >
                 {accepting ? "Meghívó elfogadása…" : "Meghívó elfogadása"}
@@ -285,56 +321,147 @@ export default function InvitationAcceptance() {
           </div>
         ) : (
           <div className="mt-6">
-            <div className="flex gap-2 border-b border-slate-200" aria-label="Hitelesítési mód">
+            <div
+              aria-label="Hitelesítési mód"
+              className="flex flex-wrap gap-2 border-b pb-2"
+              role="group"
+              style={{ borderColor: "var(--separator)" }}
+            >
               <button
                 aria-pressed={!registering}
-                className={`border-b-2 px-3 py-2 text-sm font-semibold ${registering ? "border-transparent text-slate-600" : "border-emerald-800 text-emerald-900"}`}
+                className="min-h-12 rounded-xl px-4 py-2.5 text-sm font-semibold"
                 onClick={() => { setMode("login"); setError(null); }}
+                style={{
+                  backgroundColor: registering ? "transparent" : "color-mix(in srgb, var(--tint) 12%, var(--surface))",
+                  color: registering ? "var(--label-secondary)" : "var(--tint)",
+                }}
                 type="button"
-              >Bejelentkezés</button>
+              >
+                Bejelentkezés
+              </button>
               <button
                 aria-pressed={registering}
-                className={`border-b-2 px-3 py-2 text-sm font-semibold ${registering ? "border-emerald-800 text-emerald-900" : "border-transparent text-slate-600"}`}
+                className="min-h-12 rounded-xl px-4 py-2.5 text-sm font-semibold"
                 onClick={() => { setMode("register"); setError(null); }}
+                style={{
+                  backgroundColor: registering ? "color-mix(in srgb, var(--tint) 12%, var(--surface))" : "transparent",
+                  color: registering ? "var(--tint)" : "var(--label-secondary)",
+                }}
                 type="button"
-              >Regisztráció</button>
+              >
+                Regisztráció
+              </button>
             </div>
-            <form className="mt-4 space-y-4" onSubmit={(event) => void authenticate(event)}>
+            <form className="mt-5 space-y-5" onSubmit={(event) => void authenticate(event)}>
               {registering && (
                 <div>
-                  <label className="block text-sm font-medium" htmlFor="invite-name">Név</label>
-                  <input autoComplete="name" className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-emerald-600 focus:outline-none" id="invite-name" maxLength={100} name="name" required type="text" />
+                  <label className="mb-1.5 block text-sm font-semibold" htmlFor="invite-name">Név</label>
+                  <input autoComplete="name" className="min-h-12 w-full rounded-xl border px-3 py-2.5 text-base" id="invite-name" maxLength={100} name="name" required type="text" />
                 </div>
               )}
               <div>
-                <label className="block text-sm font-medium" htmlFor="invite-email">E-mail-cím</label>
-                <input autoComplete="email" className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-emerald-600 focus:outline-none" id="invite-email" name="email" required type="email" />
+                <label className="mb-1.5 block text-sm font-semibold" htmlFor="invite-email">E-mail-cím</label>
+                <input autoComplete="email" className="min-h-12 w-full rounded-xl border px-3 py-2.5 text-base" id="invite-email" name="email" required type="email" />
               </div>
               <div>
-                <label className="block text-sm font-medium" htmlFor="invite-password">Jelszó</label>
-                <input autoComplete={registering ? "new-password" : "current-password"} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-emerald-600 focus:outline-none" id="invite-password" minLength={8} name="password" required type="password" />
+                <label className="mb-1.5 block text-sm font-semibold" htmlFor="invite-password">Jelszó</label>
+                <input
+                  aria-describedby={passwordMismatch ? "invite-auth-error" : undefined}
+                  aria-invalid={passwordMismatch || undefined}
+                  autoComplete={registering ? "new-password" : "current-password"}
+                  className="min-h-12 w-full rounded-xl border px-3 py-2.5 text-base"
+                  id="invite-password"
+                  minLength={8}
+                  name="password"
+                  required
+                  type="password"
+                />
               </div>
               {registering && (
                 <div>
-                  <label className="block text-sm font-medium" htmlFor="invite-confirm-password">Jelszó megerősítése</label>
-                  <input autoComplete="new-password" className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-emerald-600 focus:outline-none" id="invite-confirm-password" minLength={8} name="confirmPassword" required type="password" />
+                  <label className="mb-1.5 block text-sm font-semibold" htmlFor="invite-confirm-password">Jelszó megerősítése</label>
+                  <input
+                    aria-describedby={passwordMismatch ? "invite-auth-error" : undefined}
+                    aria-invalid={passwordMismatch || undefined}
+                    autoComplete="new-password"
+                    className="min-h-12 w-full rounded-xl border px-3 py-2.5 text-base"
+                    id="invite-confirm-password"
+                    minLength={8}
+                    name="confirmPassword"
+                    required
+                    type="password"
+                  />
                 </div>
               )}
-              {error && <p className="rounded-lg bg-rose-50 p-3 text-sm text-rose-800" role="alert">{error}</p>}
+              {error && (
+                <p
+                  aria-live="assertive"
+                  className="rounded-xl p-3 text-sm leading-5"
+                  id="invite-auth-error"
+                  role="alert"
+                  style={{
+                    backgroundColor: "color-mix(in srgb, var(--danger) 10%, var(--surface))",
+                    color: "var(--danger)",
+                  }}
+                >
+                  {error}
+                </p>
+              )}
               <noscript>
-                <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900" role="alert">A meghívó elfogadásához kapcsold be a JavaScriptet.</p>
+                <p
+                  className="rounded-xl p-3 text-sm leading-5"
+                  role="alert"
+                  style={{
+                    backgroundColor: "color-mix(in srgb, var(--warning) 12%, var(--surface))",
+                    color: "var(--label-primary)",
+                  }}
+                >
+                  A meghívó elfogadásához kapcsold be a JavaScriptet.
+                </p>
               </noscript>
-              <button className="w-full rounded-lg bg-emerald-800 px-4 py-2.5 font-medium text-white hover:bg-emerald-900 disabled:cursor-wait disabled:opacity-60" disabled={!authFormHydrated || authenticating} type="submit">
+              <button
+                className="min-h-12 w-full rounded-xl px-4 py-3 text-base font-semibold disabled:cursor-wait disabled:opacity-60"
+                disabled={!authFormHydrated || authenticating}
+                style={{ backgroundColor: "var(--tint)", color: "var(--label-primary)" }}
+                type="submit"
+              >
                 {authenticating ? "Kis türelmet…" : registering ? "Regisztráció és folytatás" : "Bejelentkezés és folytatás"}
               </button>
             </form>
-            <p className="mt-3 text-xs leading-5 text-slate-500">A bejelentkezés és a meghívó elfogadása ugyanazon az oldalon történik; a titkos linket nem mentjük a böngésző tárhelyére.</p>
+            <p className="mt-4 text-sm leading-6" style={{ color: "var(--label-secondary)" }}>
+              A bejelentkezés és a meghívó elfogadása ugyanazon az oldalon történik; a titkos linket nem mentjük a böngésző tárhelyére.
+            </p>
           </div>
         )}
 
-        {notice && !acceptedHousehold && <p className="mt-4 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-900" role="status">{notice}</p>}
-        {error && (session?.user || !inviteToken) && <p className="mt-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-800" role="alert">{error}</p>}
+        {notice && !acceptedHousehold && (
+          <p
+            aria-live="polite"
+            className="mt-4 rounded-xl p-3 text-sm leading-5"
+            role="status"
+            style={{
+              backgroundColor: "color-mix(in srgb, var(--success) 12%, var(--surface))",
+              color: "var(--label-primary)",
+            }}
+          >
+            {notice}
+          </p>
+        )}
+        {error && (session?.user || !inviteToken) && (
+          <p
+            aria-live="assertive"
+            className="mt-4 rounded-xl p-3 text-sm leading-5"
+            role="alert"
+            style={{
+              backgroundColor: "color-mix(in srgb, var(--danger) 10%, var(--surface))",
+              color: "var(--danger)",
+            }}
+          >
+            {error}
+          </p>
+        )}
       </section>
-    </main>
+      </main>
+    </AppShell>
   );
 }

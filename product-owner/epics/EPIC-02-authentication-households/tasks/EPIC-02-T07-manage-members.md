@@ -20,6 +20,13 @@ Provide a member list, OWNER-controlled member removal and member self-departure
 
 The user removed general role editing from T07. A member's role is chosen at invitation; there is no MEMBER↔VIEWER edit, standalone promotion, generic role PATCH, or role selector. A sole OWNER may select an existing MEMBER or VIEWER only as part of leaving: the target becomes OWNER and the departing OWNER's membership is removed in the same transaction. This decision supersedes earlier role-change and two-step transfer assumptions. The implementation record below is historical until the implementation update replaces it; manual verification is coordinated with the T06 fixture owner.
 
+## Implementation checklist
+
+- [x] `apps/api/src/app/api/v1/households/[householdId]/members/` enforces current membership and limits user IDs/e-mail visibility by role.
+- [x] OWNER removal and self-leave routes enforce last-OWNER invariants in serializable transactions; sole-OWNER transfer-and-leave is atomic.
+- [x] Membership audit records and the applied audit migration are implemented in `apps/api/prisma/schema.prisma` and `apps/api/prisma/migrations/`, without PII or secrets.
+- [x] `apps/web/src/app/members-manager.tsx` exposes allowed removal/self-leave actions without general role editing.
+
 ## Acceptance criteria
 
 - [ ] OWNER, MEMBER and VIEWER see only their selected household's member names and roles. Full account e-mail addresses are visible only to OWNER and each member for their own account; pending invitation address labels remain OWNER-only.
@@ -27,7 +34,7 @@ The user removed general role editing from T07. A member's role is chosen at inv
 - [ ] Every role can leave their own household. An OWNER can leave directly only while another OWNER remains. A sole OWNER must select an existing MEMBER or VIEWER; that member becomes OWNER while the departing OWNER is removed in one atomic transaction. Failure changes neither membership. Audit records for promotion and departure/removal are written in the same transaction without PII or secrets.
 - [ ] Concurrent removals and departures cannot leave a household without an OWNER. Removed users lose access on their next API request; a promoted OWNER has OWNER permissions on their next request. Household and target identifiers are tenant-scoped, with 401/403/404 behavior as specified above.
 
-## Verification
+## Verification checklist
 
 - [ ] With coordinated synthetic fixtures in two households, manually check member-list e-mail privacy, allowed/denied removal and self-leave for all roles, last-OWNER protection, cross-household target IDs, concurrent last-OWNER operations, audit events, atomic sole-OWNER transfer-and-leave and immediate access changes. Confirm no role selector, role `PATCH`, or standalone transfer route exists.
 - [ ] Verify 401/403/404 outcomes, T05 pending-invitation privacy, browser behavior and direct API behavior. Run focused lint/typecheck and requested repository quality checks; record actual results. Do not add or run an automated test suite for this MVP task.
@@ -43,7 +50,9 @@ EPIC-02-T03. The OWNER/MEMBER/VIEWER policy and atomic sole-OWNER leave-and-tran
 
 Household deletion, account deletion and general role editing are outside this task. OWNER is granted through household creation or the last OWNER's atomic transfer-and-leave to an existing member, never through an invitation or a standalone role-change operation. Every household must retain at least one OWNER. Open questions: none.
 
-## Implementation update — 2026-10-26 (narrowed scope)
+## Current status and implementation evidence — 2026-10-26 (scope narrowed)
+
+**Implementation status:** The API, audit path and member UI are implemented; static quality checks and a read-only privacy/authorization pass are recorded. Acceptance remains partially open because destructive mutation, last-OWNER transfer, concurrency and complete VIEWER behavior await approved coordinated synthetic fixtures.
 
 - Added `GET /api/v1/households/[householdId]/members` for all current members. The response always includes names, roles and `isSelf`; only OWNER receives member user IDs and every member's e-mail, while MEMBER/VIEWER receive only their own e-mail.
 - The target route `DELETE /api/v1/households/[householdId]/members/[userId]` is OWNER-only and removes another member. There is no `PATCH` role-change route. `DELETE /api/v1/households/[householdId]/members/me` permits self-leave; for a sole OWNER, its optional `transferToUserId` promotes an existing MEMBER/VIEWER and removes the departing OWNER atomically. The standalone `/members/transfer` route has been removed.

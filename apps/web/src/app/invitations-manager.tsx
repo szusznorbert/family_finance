@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import styles from "./household-management.module.css";
 
 type HouseholdRole = "OWNER" | "MEMBER" | "VIEWER";
 type InviteRole = Extract<HouseholdRole, "MEMBER" | "VIEWER">;
@@ -194,18 +195,18 @@ export default function InvitationsManager({
   }
 
   return (
-    <section className="mt-5 rounded-xl border border-slate-200 bg-white p-4" aria-labelledby="invitations-title">
-      <h4 className="font-semibold text-slate-900" id="invitations-title">Meghívók</h4>
-      <p className="mt-1 text-sm leading-5 text-slate-600">
+    <section className={styles.managementCard} aria-labelledby="invitations-title">
+      <h4 className={styles.cardTitle} id="invitations-title">Meghívók</h4>
+      <p className={styles.cardDescription}>
         A megadott e-mail-cím csak tájékoztató. A link birtokosa be tud lépni a háztartásba, ezért csak annak küldd el privát módon, akit fel szeretnél venni.
       </p>
 
-      <form className="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-end" onSubmit={(event) => void issueInvitation(event)}>
-        <div>
-          <label className="block text-sm font-medium text-slate-800" htmlFor="invitation-email">Tájékoztató e-mail-cím</label>
+      <form className={styles.invitationForm} onSubmit={(event) => void issueInvitation(event)}>
+        <div className={styles.formField}>
+          <label className={styles.fieldLabel} htmlFor="invitation-email">Tájékoztató e-mail-cím</label>
           <input
             autoComplete="email"
-            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none focus-visible:border-emerald-700 focus-visible:ring-2 focus-visible:ring-emerald-700/20"
+            className={styles.field}
             id="invitation-email"
             maxLength={254}
             onChange={(event) => setEmail(event.currentTarget.value)}
@@ -214,10 +215,10 @@ export default function InvitationsManager({
             value={email}
           />
         </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-800" htmlFor="invitation-role">Szerepkör</label>
+        <div className={styles.formField}>
+          <label className={styles.fieldLabel} htmlFor="invitation-role">Szerepkör</label>
           <select
-            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900"
+            className={styles.field}
             id="invitation-role"
             onChange={(event) => setInviteRole(event.currentTarget.value as InviteRole)}
             value={inviteRole}
@@ -232,28 +233,28 @@ export default function InvitationsManager({
       </form>
 
       {oneTimeLink && (
-        <div className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-3">
+        <div className={styles.oneTimeLink}>
           <p className="text-sm font-semibold text-amber-950">Másold ki most: ez a titkos link újratöltés után nem kérhető le újra.</p>
-          <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+          <div className={styles.linkControls}>
             <input aria-label="Egyszer megjelenített meghívólink" className="min-w-0 flex-1 rounded border border-amber-400 bg-white px-2 py-2 text-sm text-slate-800" onFocus={(event) => event.currentTarget.select()} readOnly value={oneTimeLink} />
             <button className="rounded-lg border border-amber-700 px-3 py-2 text-sm font-semibold text-amber-950 hover:bg-amber-100" onClick={() => void copyLink()} type="button">Link másolása</button>
           </div>
         </div>
       )}
 
-      <div className="mt-5">
-        <h5 className="text-sm font-semibold text-slate-900">Függő meghívók</h5>
+      <div className={styles.pendingBlock}>
+        <h5 className={styles.subheading}>Függő meghívók</h5>
         {invitations.length === 0 ? (
           <p className="mt-2 text-sm text-slate-600">Nincs függő meghívó.</p>
         ) : (
-          <ul className="mt-2 divide-y divide-slate-200">
+          <ul className={styles.rows}>
             {invitations.map((invitation) => (
-              <li className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between" key={invitation.id}>
-                <div className="min-w-0">
+              <li className={styles.row} key={invitation.id}>
+                <div className={styles.rowDetails}>
                   <p className="break-all text-sm font-medium text-slate-900">{invitation.email}</p>
                   <p className="mt-1 text-xs text-slate-600">{roleLabel(invitation.role)} · Lejár: {dateLabel(invitation.expiresAt)}</p>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className={styles.rowActions}>
                   <button
                     className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-60"
                     disabled={busy}

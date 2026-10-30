@@ -1,12 +1,18 @@
 # EPIC-05-T06: Show product price history and trend
 
-## Goal and value
+## Goal and user value
 
 A household member can see how the price of a product changed across their approved receipts from the first receipt feature release.
 
 ## Scope
 
 Provide a household-scoped product search/history API and a user-visible view of approved purchases, dates, comparable RON prices and the change between purchases. Source each point from a reviewed receipt line, with a way to inspect its receipt.
+
+## Implementation checklist
+
+- [ ] Implement household-scoped product history queries from approved, matched receipt lines only, retaining purchase date, comparable RON price, unit/package context, and source receipt.
+- [ ] Provide a visible product search/history view showing purchases and price change while distinguishing unlike units or package sizes.
+- [ ] Enforce household authorization for products, lines, and history; ensure history reads do not add charges to ledger/dashboard totals.
 
 ## Acceptance criteria
 
@@ -18,7 +24,7 @@ Provide a household-scoped product search/history API and a user-visible view of
 
 EPIC-05-T04 product identity and T05 approved receipt/Expense link. The first receipt release is not complete until this task is manually verified with the other receipt tasks.
 
-## Verification
+## Verification checklist
 
 - [ ] In the existing local app, approve two synthetic receipts for the same matched product with different dates/prices, inspect the visible trend and source receipts, then check a second household sees none of it. Confirm ledger totals still include one Expense per receipt. No copies or automated tests.
 

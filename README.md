@@ -21,9 +21,10 @@ Use Node.js 24.22.1, pnpm 11.25.0, Python 3, and a running Docker Engine with Co
 ./scripts/dev.sh
 ```
 
-The script checks the required tool versions and Docker access before changing local state. It creates `.env` from `.env.example` if needed, fills the starter database password and auth secret, starts PostgreSQL, generates the Prisma client, applies the initial migration, and runs both apps. The web app is available on port 3000 and the API on port 3001. Press `Ctrl+C` to stop the apps; PostgreSQL remains running.
+The script checks the required tool versions and Docker access before changing local state. It creates `.env` from `.env.example` if needed, fills the starter database password and auth secret, starts PostgreSQL and the API through Compose, and runs the web app locally. The API container applies committed migrations and keeps private documents in its named volume. The web app is available on port 3000 and the API on port 3001. Press `Ctrl+C` to stop the local web app; the API and PostgreSQL containers remain running. For phone access, configure `WEB_ORIGIN` to match the exact URL used on the phone before starting the API.
+If port 3000 is already occupied, the script exits with an error instead of letting Next.js select another port; it does not stop the existing process.
 
-To run the setup steps manually, copy `.env.example` to `.env`, configure its values, start PostgreSQL with `docker compose up -d postgres`, generate the Prisma client with `pnpm --filter api prisma:generate`, and apply migrations with `pnpm --filter api exec prisma migrate dev --name init`.
+To run the setup steps manually, copy `.env.example` to `.env`, configure its values, start PostgreSQL and the API with `docker compose up --build -d --wait api`, then run the web app with `pnpm --filter web dev`. The API container applies committed Prisma migrations at startup and uses the private `document_data` volume. Do not run a host API against this same database because it would write document files to a different root.
 
 The API uses Prisma ORM 7.10.1 with the PostgreSQL driver adapter and Better Auth 1.7.12. Prisma migrations are kept under `apps/api/prisma/migrations`.
 

@@ -6,9 +6,11 @@ You are the Household Finance implementation agent.
 
 ## Responsibility
 - Implement a clearly scoped task from the user or an approved task file under `product-owner/epics/`.
+- Before planning or implementation, confirm the task records the user's explicit `MVP phase`. Start implementation only when it is `MVP now`; if it is unresolved or `post-MVP`, do not code until the user explicitly resolves or resumes it.
 - Read the root and nearest `AGENTS.md`, current architecture documentation, relevant task/epic, and affected code before editing.
 - Before coding, check the epic's existing `tasks/plan.md` and task file. Product Owner planning happens once per epic, not once per task. Escalate unresolved or changed requirements rather than recreating plans.
 - Work through the epic's tasks in the local workspace and record each task's manual verification. Do not create task branches or task PRs; the `git_workflow` agent handles one epic branch and Git delivery only at epic completion.
+- Follow the English task template in `product-owner/README.md`. At the end of each coding/verification slice and before phase handoff, update your task file's `Implementation checklist` and `Current status and evidence` together with `work/current-task.md` per `work/README.md`. Reconcile checklist and status; mark acceptance `[x]` only when fully verified, leaving partial or unverified criteria `[ ]` with a blocker.
 - Follow the installed Next.js guidance for the pinned version before changing either Next.js app.
 - Use `vercel-react-best-practices` for React/Next.js implementation, `prisma-orm-setup` for Prisma connection or setup work, and `better-auth-best-practices` for Better Auth changes when those skills match the task.
 - Keep framework and library versions aligned with the lockfile. In particular, this project uses Prisma 7.10.1 and Better Auth 1.7.12: do not follow generic `@latest` install or migration examples from a skill, and do not upgrade dependencies unless the task explicitly calls for it.
